@@ -9,3 +9,6 @@ env/
 venv/
 .vscode/
 .idea/
+*.db
+*.sqlite
+*.log

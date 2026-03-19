@@ -4,6 +4,8 @@ from models import Payment
 from extensions import db
 from services.paystack import initialize_transaction, verify_transaction
 from utils.security import verify_paystack_signature
+from utils.decorators import admin_required
+from flask import request, redirect, session, render_template
 
 payment_bp = Blueprint("payment", __name__)
 
@@ -73,18 +75,57 @@ def webhook():
     return "", 200
 
 @payment_bp.route("/payments", methods=["GET"])
+@admin_required
 def get_payments():
-    payments = Payment.query.all()
-    # payments = Payment.query.filter_by(status="SUCCESS").all()
-    result = []
-    for p in payments:
-        result.append({
-            "id": p.id,
-            "email": p.email,
-            "amount": p.amount,
-            "reference": p.reference,
-            "status": p.status,
-            "created_at": p.created_at
-        })
+    status = request.args.get("status")
+    email = request.args.get("email")
+    start_date = request.args.get("start_date")
+    end_date = request.args.get("end_date")
 
-    return jsonify(result)
+    query = Payment.query
+
+    if status:
+        query = query.filter(Payment.status == status)
+
+    if email:
+        query = query.filter(Payment.email == email)
+
+    if start_date and end_date:
+        query = query.filter(
+            Payment.created_at.between(start_date, end_date)
+        )
+
+    payments = query.order_by(Payment.id.desc()).all()
+
+    return jsonify([p.to_dict() for p in payments])
+
+@payment_bp.route("/dashboard")
+@admin_required
+def dashboard():
+
+    return render_template("dashboard.html")
+
+
+from werkzeug.security import check_password_hash
+from models import Admin
+
+@payment_bp.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        email = request.form.get("email")
+        password = request.form.get("password")
+
+        admin = Admin.query.filter_by(email=email).first()
+
+        if admin and check_password_hash(admin.password_hash, password):
+            session["admin"] = admin.id
+            return redirect("/api/dashboard")
+
+        return "Invalid credentials"
+
+    return render_template("login.html")
+
+@payment_bp.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/api/login")
