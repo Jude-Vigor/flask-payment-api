@@ -1,27 +1,38 @@
-# services/paystack.py
+from decimal import Decimal, ROUND_HALF_UP
+
 import requests
 from flask import current_app
 
-def headers():
+
+def _headers():
     return {
         "Authorization": f"Bearer {current_app.config['PAYSTACK_SECRET_KEY']}",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
     }
 
-def initialize_transaction(email, amount):
-    url = "https://api.paystack.co/transaction/initialize"
 
+def _to_subunit_amount(amount):
+    decimal_amount = Decimal(str(amount))
+    return int((decimal_amount * 100).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+
+
+def initialize_transaction(email, amount, reference, metadata=None):
+    url = "https://api.paystack.co/transaction/initialize"
     payload = {
         "email": email,
-        "amount": amount * 100,
-        "callback_url": f"{current_app.config['BASE_URL']}/api/verify"
+        "amount": _to_subunit_amount(amount),
+        "reference": reference,
+        "callback_url": f"{current_app.config['BASE_URL']}/api/payments/verify",
     }
 
-    res = requests.post(url, json=payload, headers=headers())
-    return res.json()
+    if metadata:
+        payload["metadata"] = metadata
+
+    response = requests.post(url, json=payload, headers=_headers(), timeout=30)
+    return response.json()
 
 
 def verify_transaction(reference):
     url = f"https://api.paystack.co/transaction/verify/{reference}"
-    res = requests.get(url, headers=headers())
-    return res.json()
+    response = requests.get(url, headers=_headers(), timeout=30)
+    return response.json()
