@@ -65,7 +65,7 @@ def webhook():
 
     if event["event"] == "charge.success":
         reference = event["data"]["reference"]
-
+    
         payment = Payment.query.filter_by(reference=reference).first()
 
         if payment and payment.status != "SUCCESS":
