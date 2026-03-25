@@ -46,8 +46,9 @@
     
     <select id="status">
         <option value="">All Status</option>
-        <option value="SUCCESS">Success</option>
+        <option value="PAID">Paid</option>
         <option value="PENDING">Pending</option>
+        <option value="FAILED">Failed</option>
     </select>
 
     <input type="date" id="start">
@@ -103,7 +104,7 @@ async function loadPayments() {
     tbody.innerHTML = "";
 
     data.forEach(p => {
-        if (p.status === "SUCCESS") {
+        if (p.status === "PAID") {
             total += p.amount;
 
             let date = p.created_at.split("T")[0];
@@ -114,7 +115,7 @@ async function loadPayments() {
             <tr>
                 <td>${p.email}</td>
                 <td>₵${p.amount}</td>
-                <td class="${p.status === 'SUCCESS' ? 'success' : 'pending'}">
+                <td class="${p.status === 'PAID' ? 'success' : 'pending'}">
                     ${p.status}
                 </td>
                 <td>${p.reference}</td>
