@@ -4,8 +4,9 @@ import os
 load_dotenv()
 
 class Config:
-    SQLALCHEMY_DATABASE_URI = "sqlite:///app.db"
+    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", "sqlite:///app.db")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    AUTO_CREATE_TABLES = os.getenv("AUTO_CREATE_TABLES", "true").lower() == "true"
 
     SECRET_KEY = os.getenv("SECRET_KEY")
     PAYSTACK_SECRET_KEY = os.getenv("PAYSTACK_SECRET_KEY")

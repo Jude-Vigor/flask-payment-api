@@ -7,8 +7,8 @@ from flask import Blueprint, current_app, jsonify, redirect, render_template, re
 from werkzeug.security import check_password_hash
 
 from extensions import db
-from models import Admin, FulfillmentAttempt, Order, PaymentTransaction, Product
-from services.instantdatagh import create_order as create_vendor_order
+from models import Admin, Order, PaymentTransaction, Product
+from services.fulfillment import enqueue_fulfillment
 from services.paystack import initialize_transaction, verify_transaction
 from utils.decorators import admin_required
 from utils.security import verify_paystack_signature
@@ -16,7 +16,6 @@ from utils.security import verify_paystack_signature
 payment_bp = Blueprint("payment", __name__)
 
 PHONE_PATTERN = re.compile(r"^0\d{9}$")
-VALID_NETWORKS = {"MTN", "AirtelTigo", "Telecel"}
 
 
 def _json_error(message, status_code=400):
@@ -82,56 +81,15 @@ def _mark_payment_failed(order, provider_response):
     transaction.provider_response = _serialize(provider_response)
 
 
-def _submit_fulfillment(order):
-    if order.fulfillment_status in {"PROCESSING", "DELIVERED"}:
-        return
+def _mark_order_delivered(order):
+    order.fulfillment_status = "DELIVERED"
+    order.vendor_status = "COMPLETED"
+    order.fulfilled_at = order.fulfilled_at or datetime.utcnow()
 
-    if order.product.network not in VALID_NETWORKS:
-        raise ValueError("Unsupported network configured for product.")
 
-    request_payload = {
-        "network": order.product.network,
-        "phone_number": order.phone_number,
-        "data_amount": order.product.data_amount,
-    }
-
-    attempt = FulfillmentAttempt(
-        order=order,
-        status="PENDING",
-        request_payload=_serialize(request_payload),
-    )
-    db.session.add(attempt)
-    db.session.flush()
-
-    try:
-        _, response_payload = create_vendor_order(
-            network=order.product.network,
-            phone_number=order.phone_number,
-            data_amount=order.product.data_amount,
-        )
-    except Exception as exc:
-        attempt.status = "FAILED"
-        attempt.error_message = str(exc)
-        order.fulfillment_status = "FAILED"
-        db.session.commit()
-        raise
-
-    attempt.response_payload = _serialize(response_payload)
-
-    if response_payload.get("status") == "success":
-        vendor_data = response_payload.get("data") or {}
-        attempt.status = "ACCEPTED"
-        order.fulfillment_status = "PROCESSING"
-        order.vendor_order_id = vendor_data.get("order_id")
-        order.vendor_status = vendor_data.get("status")
-        order.vendor_response = _serialize(response_payload)
-    else:
-        attempt.status = "FAILED"
-        attempt.error_message = response_payload.get("message", "Vendor fulfillment failed.")
-        order.fulfillment_status = "FAILED"
-        order.vendor_response = _serialize(response_payload)
-
-    db.session.commit()
+def _mark_order_failed(order):
+    order.fulfillment_status = "FAILED"
+    order.vendor_status = "FAILED"
 
 
 @payment_bp.route("/products", methods=["GET"])
@@ -221,24 +179,9 @@ def verify_payment():
     if verification_response.get("status") and verified_data.get("status") == "success":
         if order.payment_status != "PAID":
             _mark_payment_paid(order, verification_response)
-            db.session.commit()
-
-        if order.fulfillment_status == "PENDING":
-            try:
-                _submit_fulfillment(order)
-            except Exception as exc:
-                current_app.logger.exception("InstantDataGH fulfillment failed for %s", reference)
-                return (
-                    jsonify(
-                        {
-                            "status": "partial_success",
-                            "message": "Payment verified but fulfillment submission failed.",
-                            "error": str(exc),
-                            "order": order.to_dict(),
-                        }
-                    ),
-                    502,
-                )
+        if order.fulfillment_status in {"PENDING", "RETRYING", "FAILED"}:
+            enqueue_fulfillment(order)
+        db.session.commit()
     else:
         _mark_payment_failed(order, verification_response)
         db.session.commit()
@@ -247,6 +190,7 @@ def verify_payment():
         {
             "status": "success",
             "payment_verification": verification_response,
+            "message": "Payment verified and fulfillment queued." if order.payment_status == "PAID" else "Payment verification failed.",
             "order": order.to_dict(),
         }
     )
@@ -274,14 +218,9 @@ def paystack_webhook():
 
     if order.payment_status != "PAID":
         _mark_payment_paid(order, event)
-        db.session.commit()
-
-    if order.fulfillment_status == "PENDING":
-        try:
-            _submit_fulfillment(order)
-        except Exception:
-            current_app.logger.exception("InstantDataGH fulfillment failed for %s", reference)
-            return "", 500
+    if order.fulfillment_status in {"PENDING", "RETRYING", "FAILED"}:
+        enqueue_fulfillment(order)
+    db.session.commit()
 
     return "", 200
 
@@ -293,6 +232,50 @@ def get_order(reference):
         return _json_error("Order not found.", 404)
 
     return jsonify(order.to_dict())
+
+
+@payment_bp.route("/orders/<reference>/mark-delivered", methods=["POST"])
+@admin_required
+def mark_order_delivered(reference):
+    order = Order.query.filter_by(reference=reference).first()
+    if not order:
+        return _json_error("Order not found.", 404)
+
+    if order.payment_status != "PAID":
+        return _json_error("Only paid orders can be marked as delivered.", 400)
+
+    _mark_order_delivered(order)
+    db.session.commit()
+
+    return jsonify(
+        {
+            "status": "success",
+            "message": "Order marked as delivered.",
+            "order": order.to_dict(),
+        }
+    )
+
+
+@payment_bp.route("/orders/<reference>/mark-failed", methods=["POST"])
+@admin_required
+def mark_order_failed(reference):
+    order = Order.query.filter_by(reference=reference).first()
+    if not order:
+        return _json_error("Order not found.", 404)
+
+    if order.payment_status != "PAID":
+        return _json_error("Only paid orders can be marked as failed.", 400)
+
+    _mark_order_failed(order)
+    db.session.commit()
+
+    return jsonify(
+        {
+            "status": "success",
+            "message": "Order marked as failed.",
+            "order": order.to_dict(),
+        }
+    )
 
 
 @payment_bp.route("/payments", methods=["GET"])

@@ -18,7 +18,7 @@
             margin-bottom: 15px;
         }
 
-        input, select {
+        input, select, button {
             padding: 8px;
             margin-right: 10px;
         }
@@ -31,19 +31,31 @@
         th, td {
             padding: 10px;
             border-bottom: 1px solid #334155;
+            text-align: left;
         }
 
         .success { color: #22c55e; }
         .pending { color: #f59e0b; }
+        .failed { color: #ef4444; }
+
+        .action {
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            color: white;
+        }
+
+        .deliver { background: #16a34a; }
+        .fail { background: #dc2626; }
     </style>
 </head>
 <body>
 
-<h1>💰 Payment Dashboard</h1>
+<h1>Payment Dashboard</h1>
 
 <div class="card">
     <input type="text" id="email" placeholder="Filter by email">
-    
+
     <select id="status">
         <option value="">All Status</option>
         <option value="PAID">Paid</option>
@@ -58,7 +70,7 @@
 </div>
 
 <div class="card">
-    <h3>Total Revenue: ₵ <span id="total">0</span></h3>
+    <h3>Total Revenue: GHS <span id="total">0</span></h3>
 </div>
 
 <div class="card">
@@ -71,8 +83,10 @@
             <tr>
                 <th>Email</th>
                 <th>Amount</th>
-                <th>Status</th>
+                <th>Payment</th>
+                <th>Fulfillment</th>
                 <th>Reference</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody id="table-body"></tbody>
@@ -82,6 +96,30 @@
 <script>
 let chart;
 
+function fulfillmentClass(status) {
+    if (status === "DELIVERED") return "success";
+    if (status === "FAILED") return "failed";
+    return "pending";
+}
+
+function canResolveManually(order) {
+    return order.status === "PAID" && ["QUEUED", "PROCESSING", "RETRYING"].includes(order.fulfillment_status);
+}
+
+async function updateOrderStatus(reference, action) {
+    const res = await fetch(`/api/orders/${reference}/${action}`, {
+        method: "POST"
+    });
+
+    if (!res.ok) {
+        const error = await res.json().catch(() => ({ message: "Request failed" }));
+        alert(error.message || "Request failed");
+        return;
+    }
+
+    await loadPayments();
+}
+
 async function loadPayments() {
     const email = document.getElementById("email").value;
     const status = document.getElementById("status").value;
@@ -90,8 +128,8 @@ async function loadPayments() {
 
     let url = `/api/payments?`;
 
-    if (email) url += `email=${email}&`;
-    if (status) url += `status=${status}&`;
+    if (email) url += `email=${encodeURIComponent(email)}&`;
+    if (status) url += `status=${encodeURIComponent(status)}&`;
     if (start && end) url += `start_date=${start}&end_date=${end}`;
 
     const res = await fetch(url);
@@ -103,41 +141,44 @@ async function loadPayments() {
     const tbody = document.getElementById("table-body");
     tbody.innerHTML = "";
 
-    data.forEach(p => {
-        if (p.status === "PAID") {
-            total += p.amount;
+    data.forEach(order => {
+        if (order.status === "PAID") {
+            total += order.amount;
 
-            let date = p.created_at.split("T")[0];
-            daily[date] = (daily[date] || 0) + p.amount;
+            const date = order.created_at.split("T")[0];
+            daily[date] = (daily[date] || 0) + order.amount;
         }
 
         tbody.innerHTML += `
             <tr>
-                <td>${p.email}</td>
-                <td>₵${p.amount}</td>
-                <td class="${p.status === 'PAID' ? 'success' : 'pending'}">
-                    ${p.status}
+                <td>${order.email}</td>
+                <td>GHS ${order.amount}</td>
+                <td class="${order.status === 'PAID' ? 'success' : 'pending'}">${order.status}</td>
+                <td class="${fulfillmentClass(order.fulfillment_status)}">${order.fulfillment_status}</td>
+                <td>${order.reference}</td>
+                <td>
+                    ${canResolveManually(order) ? `
+                        <button class="action deliver" onclick="updateOrderStatus('${order.reference}', 'mark-delivered')">Mark Delivered</button>
+                        <button class="action fail" onclick="updateOrderStatus('${order.reference}', 'mark-failed')">Mark Failed</button>
+                    ` : ''}
                 </td>
-                <td>${p.reference}</td>
             </tr>
         `;
     });
 
-    document.getElementById("total").innerText = total;
-
+    document.getElementById("total").innerText = total.toFixed(2);
     renderChart(daily);
 }
 
 function renderChart(data) {
     const labels = Object.keys(data);
     const values = Object.values(data);
-
     const ctx = document.getElementById("revenueChart");
 
     if (chart) chart.destroy();
 
     chart = new Chart(ctx, {
-        type: 'line',
+        type: "line",
         data: {
             labels: labels,
             datasets: [{

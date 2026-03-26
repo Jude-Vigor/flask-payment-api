@@ -81,6 +81,12 @@ class Order(db.Model):
         lazy=True,
         cascade="all, delete-orphan",
     )
+    fulfillment_job = db.relationship(
+        "FulfillmentJob",
+        back_populates="order",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
 
     def to_dict(self):
         return {
@@ -96,6 +102,7 @@ class Order(db.Model):
             "vendor_status": self.vendor_status,
             "vendor_response": _json_loads(self.vendor_response),
             "paystack_reference": self.paystack_reference,
+            "fulfillment_job": self.fulfillment_job.to_dict() if self.fulfillment_job else None,
             "paid_at": self.paid_at.isoformat() if self.paid_at else None,
             "fulfilled_at": self.fulfilled_at.isoformat() if self.fulfilled_at else None,
             "created_at": self.created_at.isoformat(),
@@ -142,6 +149,39 @@ class FulfillmentAttempt(db.Model):
 
     order_id = db.Column(db.Integer, db.ForeignKey("order.id"), nullable=False)
     order = db.relationship("Order", back_populates="fulfillment_attempts")
+
+
+class FulfillmentJob(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    status = db.Column(db.String(20), default="PENDING", nullable=False)
+    attempts = db.Column(db.Integer, default=0, nullable=False)
+    max_attempts = db.Column(db.Integer, default=5, nullable=False)
+    next_retry_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    locked_at = db.Column(db.DateTime, nullable=True)
+    last_error = db.Column(db.String(255), nullable=True)
+    last_response = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False,
+    )
+
+    order_id = db.Column(db.Integer, db.ForeignKey("order.id"), unique=True, nullable=False)
+    order = db.relationship("Order", back_populates="fulfillment_job")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "status": self.status,
+            "attempts": self.attempts,
+            "max_attempts": self.max_attempts,
+            "next_retry_at": self.next_retry_at.isoformat() if self.next_retry_at else None,
+            "locked_at": self.locked_at.isoformat() if self.locked_at else None,
+            "last_error": self.last_error,
+            "last_response": _json_loads(self.last_response),
+        }
 
 
 class Admin(db.Model):
