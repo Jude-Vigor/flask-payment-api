@@ -281,6 +281,7 @@ Since vendor confirmation is not fully automated yet, admin can mark final state
 Why this is useful:
 - keeps operations practical
 - gives control when vendor data is only available in dashboard form
+- gives the admin a clear queue view through the internal dashboard
 
 ## 6. Current Status Lifecycle
 

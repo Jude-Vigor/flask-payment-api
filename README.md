@@ -120,6 +120,7 @@ For local testing, run that command in another terminal while the app is running
 - `GET /api/login`
 - `GET /api/dashboard`
 - `GET /api/payments`
+- `GET /api/fulfillment-jobs`
 - `POST /api/orders/<reference>/mark-delivered`
 - `POST /api/orders/<reference>/mark-failed`
 

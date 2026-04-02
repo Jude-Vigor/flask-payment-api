@@ -273,6 +273,9 @@ Shows the admin dashboard.
 - `GET /api/payments`
 Returns order data for the dashboard.
 
+- `GET /api/fulfillment-jobs`
+Returns fulfillment queue data for admin monitoring.
+
 - `POST /api/orders/<reference>/mark-delivered`
 Admin manually marks an order as delivered.
 
@@ -301,6 +304,7 @@ This page:
 - shows payment status
 - shows fulfillment status
 - gives manual admin actions
+- shows fulfillment jobs with a status filter and refresh button
 
 ### Login Page
 

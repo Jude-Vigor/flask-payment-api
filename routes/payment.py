@@ -7,7 +7,7 @@ from flask import Blueprint, current_app, jsonify, redirect, render_template, re
 from werkzeug.security import check_password_hash
 
 from extensions import db
-from models import Admin, Order, PaymentTransaction, Product
+from models import Admin, FulfillmentJob, Order, PaymentTransaction, Product
 from services.fulfillment import enqueue_fulfillment
 from services.paystack import initialize_transaction, verify_transaction
 from utils.decorators import admin_required
@@ -299,6 +299,44 @@ def get_payments():
 
     orders = query.order_by(Order.id.desc()).all()
     return jsonify([order.to_dashboard_dict() for order in orders])
+
+
+@payment_bp.route("/fulfillment-jobs", methods=["GET"])
+@admin_required
+def get_fulfillment_jobs():
+    status = request.args.get("status")
+
+    query = FulfillmentJob.query.join(Order).order_by(FulfillmentJob.id.desc())
+
+    if status:
+        query = query.filter(FulfillmentJob.status == status)
+
+    jobs = query.all()
+
+    return jsonify(
+        [
+            {
+                "id": job.id,
+                "status": job.status,
+                "attempts": job.attempts,
+                "max_attempts": job.max_attempts,
+                "next_retry_at": job.next_retry_at.isoformat() if job.next_retry_at else None,
+                "locked_at": job.locked_at.isoformat() if job.locked_at else None,
+                "last_error": job.last_error,
+                "last_response": json.loads(job.last_response) if job.last_response else None,
+                "order": {
+                    "id": job.order.id,
+                    "reference": job.order.reference,
+                    "payment_status": job.order.payment_status,
+                    "fulfillment_status": job.order.fulfillment_status,
+                    "customer_email": job.order.customer_email,
+                    "phone_number": job.order.phone_number,
+                    "vendor_order_id": job.order.vendor_order_id,
+                },
+            }
+            for job in jobs
+        ]
+    )
 
 
 @payment_bp.route("/dashboard")

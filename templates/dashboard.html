@@ -93,10 +93,39 @@
     </table>
 </div>
 
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px;">
+        <h3 style="margin: 0;">Fulfillment Jobs</h3>
+        <div>
+            <select id="job-status" onchange="loadFulfillmentJobs()">
+                <option value="">All Jobs</option>
+                <option value="PENDING">Pending</option>
+                <option value="RETRYING">Retrying</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="FAILED">Failed</option>
+            </select>
+            <button onclick="loadFulfillmentJobs()">Refresh Jobs</button>
+        </div>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Order Ref</th>
+                <th>Job Status</th>
+                <th>Attempts</th>
+                <th>Next Retry</th>
+                <th>Last Error</th>
+            </tr>
+        </thead>
+        <tbody id="jobs-body"></tbody>
+    </table>
+</div>
+
 <script>
 let chart;
 
 function fulfillmentClass(status) {
+    if (status === "COMPLETED") return "success";
     if (status === "DELIVERED") return "success";
     if (status === "FAILED") return "failed";
     return "pending";
@@ -118,6 +147,7 @@ async function updateOrderStatus(reference, action) {
     }
 
     await loadPayments();
+    await loadFulfillmentJobs();
 }
 
 async function loadPayments() {
@@ -170,6 +200,40 @@ async function loadPayments() {
     renderChart(daily);
 }
 
+async function loadFulfillmentJobs() {
+    const jobStatus = document.getElementById("job-status").value;
+    const url = jobStatus
+        ? `/api/fulfillment-jobs?status=${encodeURIComponent(jobStatus)}`
+        : "/api/fulfillment-jobs";
+
+    const res = await fetch(url);
+    const jobs = await res.json();
+    const tbody = document.getElementById("jobs-body");
+
+    tbody.innerHTML = "";
+
+    if (!jobs.length) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5">No fulfillment jobs found.</td>
+            </tr>
+        `;
+        return;
+    }
+
+    jobs.forEach(job => {
+        tbody.innerHTML += `
+            <tr>
+                <td>${job.order.reference}</td>
+                <td class="${fulfillmentClass(job.status)}">${job.status}</td>
+                <td>${job.attempts}/${job.max_attempts}</td>
+                <td>${job.next_retry_at || "-"}</td>
+                <td>${job.last_error || "-"}</td>
+            </tr>
+        `;
+    });
+}
+
 function renderChart(data) {
     const labels = Object.keys(data);
     const values = Object.values(data);
@@ -190,6 +254,7 @@ function renderChart(data) {
 }
 
 loadPayments();
+loadFulfillmentJobs();
 </script>
 
 </body>

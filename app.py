@@ -1,5 +1,5 @@
 import click
-from flask import Flask
+from flask import Flask, render_template
 
 from config import Config
 from extensions import db, migrate
@@ -39,6 +39,11 @@ def create_app():
             seed_products()
 
     app.register_blueprint(payment_bp, url_prefix="/api")
+
+    @app.get("/")
+    def home():
+        return render_template("index.html")
+
     register_commands(app)
 
     return app
