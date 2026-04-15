@@ -1,0 +1,14 @@
+[Unit]
+Description=Payments API fulfillment worker
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/srv/payments_api
+ExecStart=/srv/payments_api/venv/bin/flask --app app run-fulfillment-worker --interval-seconds 10 --limit 10
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

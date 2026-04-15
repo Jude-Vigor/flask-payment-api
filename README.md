@@ -46,6 +46,14 @@ Install dependencies:
 venv\Scripts\python -m pip install -r requirements.txt
 ```
 
+For Linux VPS deployment, install production dependencies instead:
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements-prod.txt
+```
+
 Add your environment variables in `.env`.
 
 Important values:
@@ -105,6 +113,20 @@ venv\Scripts\flask --app app process-fulfillment --limit 10
 
 For local testing, run that command in another terminal while the app is running.
 
+For production, run the continuous worker command under a supervisor:
+
+```bash
+flask --app app run-fulfillment-worker --interval-seconds 10 --limit 10
+```
+
+## Launch Readiness Check
+
+Validate the required environment variables and confirm there is at least one active product:
+
+```powershell
+venv\Scripts\flask --app app launch-check
+```
+
 ## Key Routes
 
 ### Public
@@ -145,6 +167,27 @@ In another terminal:
 ```powershell
 venv\Scripts\flask --app app process-fulfillment --limit 10
 ```
+
+## Production Deployment
+
+Use one VPS with two supervised processes:
+
+- web app: Gunicorn behind Nginx
+- worker: `flask --app app run-fulfillment-worker --interval-seconds 10 --limit 10`
+
+Deployment examples are included here:
+
+- [DEPLOYMENT.md](/C:/Users/DELL/Desktop/payments_api/DEPLOYMENT.md)
+- [payments-api-web.service](/C:/Users/DELL/Desktop/payments_api/deploy/systemd/payments-api-web.service)
+- [payments-api-worker.service](/C:/Users/DELL/Desktop/payments_api/deploy/systemd/payments-api-worker.service)
+- [payments-api.conf.example](/C:/Users/DELL/Desktop/payments_api/deploy/nginx/payments-api.conf.example)
+
+Before going live:
+
+1. Set `BASE_URL` to the public HTTPS domain.
+2. Point Paystack callback to `/api/payments/verify`.
+3. Point Paystack webhook to `/api/webhooks/paystack`.
+4. Run one real payment and confirm the order is queued and picked up by the worker.
 
 ## Notes
 
