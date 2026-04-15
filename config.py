@@ -7,7 +7,9 @@ load_dotenv()
 def _database_uri():
     database_url = os.getenv("DATABASE_URL", "sqlite:///app.db")
     if database_url.startswith("postgres://"):
-        return database_url.replace("postgres://", "postgresql://", 1)
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
+    if database_url.startswith("postgresql://"):
+        return database_url.replace("postgresql://", "postgresql+psycopg://", 1)
     return database_url
 
 
