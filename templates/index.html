@@ -152,6 +152,31 @@
             font-size: 0.95rem;
         }
 
+        .network-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .network-chip {
+            border: 1px solid var(--line);
+            background: white;
+            color: var(--ink);
+            border-radius: 999px;
+            padding: 10px 14px;
+            font-size: 0.92rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .network-chip.active {
+            background: var(--brand);
+            color: white;
+            border-color: var(--brand);
+        }
+
         .products {
             display: grid;
             gap: 12px;
@@ -351,9 +376,10 @@
                 <div class="section-head">
                     <div>
                         <h2>Choose a bundle</h2>
-                        <p>Select one product, then check out on Paystack.</p>
+                        <p>Pick a network first, then choose one bundle to check out on Paystack.</p>
                     </div>
                 </div>
+                <div id="network-filters" class="network-filters"></div>
                 <div id="products" class="products"></div>
                 <p id="products-empty" class="empty" hidden>No active products are available right now.</p>
             </div>
@@ -409,13 +435,23 @@
         const checkoutButton = document.getElementById("checkout-button");
         const orderStatusEl = document.getElementById("order-status");
         const paymentBannerEl = document.getElementById("payment-banner");
+        const networkFiltersEl = document.getElementById("network-filters");
         const queryParams = new URLSearchParams(window.location.search);
 
         let products = [];
         let selectedProductId = null;
+        let selectedNetwork = null;
+
+        function getVisibleProducts() {
+            if (!selectedNetwork) {
+                return [];
+            }
+
+            return products.filter(product => product.network === selectedNetwork);
+        }
 
         function renderSelectedProduct() {
-            const product = products.find(item => item.id === selectedProductId);
+            const product = getVisibleProducts().find(item => item.id === selectedProductId);
 
             if (!product) {
                 selectedProductEl.className = "status-box";
@@ -432,11 +468,40 @@
             `;
         }
 
+        function renderNetworkFilters() {
+            networkFiltersEl.innerHTML = "";
+
+            const networks = [...new Set(products.map(product => product.network))];
+
+            networks.forEach(network => {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "network-chip";
+                button.textContent = network;
+
+                if (network === selectedNetwork) {
+                    button.classList.add("active");
+                }
+
+                button.addEventListener("click", () => {
+                    selectedNetwork = network;
+                    const visibleProducts = getVisibleProducts();
+                    selectedProductId = visibleProducts.length > 0 ? visibleProducts[0].id : null;
+                    renderNetworkFilters();
+                    renderProducts();
+                    renderSelectedProduct();
+                });
+
+                networkFiltersEl.appendChild(button);
+            });
+        }
+
         function renderProducts() {
             productsEl.innerHTML = "";
-            emptyEl.hidden = products.length !== 0;
+            const visibleProducts = getVisibleProducts();
+            emptyEl.hidden = visibleProducts.length !== 0;
 
-            products.forEach(product => {
+            visibleProducts.forEach(product => {
                 const card = document.createElement("button");
                 card.type = "button";
                 card.className = "product-card";
@@ -468,9 +533,11 @@
             products = await response.json();
 
             if (products.length > 0) {
-                selectedProductId = products[0].id;
+                selectedNetwork = products[0].network;
+                selectedProductId = getVisibleProducts()[0]?.id || null;
             }
 
+            renderNetworkFilters();
             renderProducts();
             renderSelectedProduct();
         }

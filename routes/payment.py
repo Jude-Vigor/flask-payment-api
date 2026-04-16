@@ -2,6 +2,7 @@ import json
 import re
 from datetime import datetime
 from secrets import token_hex
+from urllib.parse import urlencode
 
 from flask import Blueprint, current_app, jsonify, redirect, render_template, request, session
 from sqlalchemy import Integer, cast
@@ -91,6 +92,15 @@ def _mark_order_delivered(order):
 def _mark_order_failed(order):
     order.fulfillment_status = "FAILED"
     order.vendor_status = "FAILED"
+
+
+def _wants_json_response():
+    accept_header = request.accept_mimetypes
+    return (
+        request.args.get("format") == "json"
+        or request.headers.get("X-Requested-With") == "XMLHttpRequest"
+        or accept_header["application/json"] >= accept_header["text/html"]
+    )
 
 
 @payment_bp.route("/products", methods=["GET"])
@@ -187,14 +197,23 @@ def verify_payment():
         _mark_payment_failed(order, verification_response)
         db.session.commit()
 
-    return jsonify(
+    payload = {
+        "status": "success",
+        "payment_verification": verification_response,
+        "message": "Payment verified and fulfillment queued." if order.payment_status == "PAID" else "Payment verification failed.",
+        "order": order.to_dict(),
+    }
+
+    if _wants_json_response():
+        return jsonify(payload)
+
+    query = urlencode(
         {
-            "status": "success",
-            "payment_verification": verification_response,
-            "message": "Payment verified and fulfillment queued." if order.payment_status == "PAID" else "Payment verification failed.",
-            "order": order.to_dict(),
+            "payment_reference": order.reference,
+            "payment_status": order.payment_status,
         }
     )
+    return redirect(f"/?{query}")
 
 
 @payment_bp.route("/webhooks/paystack", methods=["POST"])
