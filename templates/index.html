@@ -120,6 +120,24 @@
             padding: 18px;
         }
 
+        .banner {
+            margin-top: 16px;
+            padding: 18px;
+            border-radius: 18px;
+            background: rgba(240, 253, 244, 0.95);
+            border: 1px solid rgba(34, 197, 94, 0.18);
+            color: #166534;
+            box-shadow: var(--shadow);
+        }
+
+        .banner h2 {
+            margin-bottom: 8px;
+        }
+
+        .banner p:last-child {
+            margin-bottom: 0;
+        }
+
         .section-head {
             display: flex;
             justify-content: space-between;
@@ -326,6 +344,8 @@
             </div>
         </section>
 
+        <section id="payment-banner" class="banner" hidden></section>
+
         <section class="content-grid" style="margin-top: 16px;">
             <div class="panel">
                 <div class="section-head">
@@ -388,6 +408,8 @@
         const selectedProductEl = document.getElementById("selected-product");
         const checkoutButton = document.getElementById("checkout-button");
         const orderStatusEl = document.getElementById("order-status");
+        const paymentBannerEl = document.getElementById("payment-banner");
+        const queryParams = new URLSearchParams(window.location.search);
 
         let products = [];
         let selectedProductId = null;
@@ -526,7 +548,50 @@
             }
         });
 
+        async function showReturnedPaymentStatus() {
+            const paymentReference = queryParams.get("payment_reference");
+            if (!paymentReference) {
+                return;
+            }
+
+            document.getElementById("reference").value = paymentReference;
+
+            try {
+                const response = await fetch(`/api/orders/${encodeURIComponent(paymentReference)}`);
+                const payload = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(payload.message || "Order lookup failed.");
+                }
+
+                orderStatusEl.hidden = false;
+                orderStatusEl.className = `status-box ${payload.payment_status === "PAID" ? "success" : "error"}`;
+                orderStatusEl.innerHTML = `
+                    <strong>${payload.reference}</strong><br>
+                    Payment: ${payload.payment_status}<br>
+                    Fulfillment: ${payload.fulfillment_status}<br>
+                    Vendor Order ID: ${payload.vendor_order_id || "Not assigned yet"}
+                `;
+
+                if (payload.payment_status === "PAID") {
+                    paymentBannerEl.hidden = false;
+                    paymentBannerEl.innerHTML = `
+                        <h2>Payment received. Thanks for your order.</h2>
+                        <p>Your order reference is <strong>${payload.reference}</strong>.</p>
+                        <p>We&rsquo;ve queued your bundle for delivery.</p>
+                    `;
+                }
+
+                history.replaceState({}, "", "/");
+            } catch (error) {
+                orderStatusEl.hidden = false;
+                orderStatusEl.className = "status-box error";
+                orderStatusEl.textContent = error.message;
+            }
+        }
+
         loadProducts();
+        showReturnedPaymentStatus();
     </script>
 </body>
 </html>
