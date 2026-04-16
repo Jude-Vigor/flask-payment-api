@@ -4,6 +4,7 @@ from datetime import datetime
 from secrets import token_hex
 
 from flask import Blueprint, current_app, jsonify, redirect, render_template, request, session
+from sqlalchemy import Integer, cast
 from werkzeug.security import check_password_hash
 
 from extensions import db
@@ -96,7 +97,7 @@ def _mark_order_failed(order):
 def get_products():
     products = (
         Product.query.filter_by(is_active=True)
-        .order_by(Product.network.asc(), Product.data_amount.asc())
+        .order_by(Product.network.asc(), cast(Product.data_amount, Integer).asc())
         .all()
     )
     return jsonify([product.to_dict() for product in products])
