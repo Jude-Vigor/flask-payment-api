@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QuickData Ghana</title>
+    <title>Datanet</title>
     <style>
         :root {
             --bg: #f6f2e8;
@@ -177,6 +177,45 @@
             border-color: var(--brand);
         }
 
+        .network-chip[data-network="MTN"] {
+            background: #ffcb05;
+            border-color: #d4a700;
+            color: #111827;
+        }
+
+        .network-chip[data-network="MTN"].active {
+            background: #111827;
+            border-color: #111827;
+            color: #ffcb05;
+            box-shadow: 0 8px 18px rgba(17, 24, 39, 0.18);
+        }
+
+        .network-chip[data-network="Telecel"] {
+            background: #e31b23;
+            border-color: #b91c1c;
+            color: white;
+        }
+
+        .network-chip[data-network="Telecel"].active {
+            background: #7f1d1d;
+            border-color: #7f1d1d;
+            color: #fee2e2;
+            box-shadow: 0 8px 18px rgba(127, 29, 29, 0.18);
+        }
+
+        .network-chip[data-network="AirtelTigo"] {
+            background: linear-gradient(135deg, #ef4444 0%, #ef4444 50%, #1e3a8a 50%, #1e40af 100%);
+            border-color: #1e3a8a;
+            color: white;
+        }
+
+        .network-chip[data-network="AirtelTigo"].active {
+            background: linear-gradient(135deg, #991b1b 0%, #991b1b 50%, #1e3a8a 50%, #172554 100%);
+            border-color: #172554;
+            color: #f8fafc;
+            box-shadow: 0 8px 18px rgba(30, 58, 138, 0.18);
+        }
+
         .products {
             display: grid;
             gap: 12px;
@@ -195,6 +234,33 @@
             border-color: var(--brand);
             transform: translateY(-2px);
             box-shadow: 0 8px 18px rgba(15, 118, 110, 0.10);
+        }
+
+        .product-card[data-network="MTN"] {
+            background: linear-gradient(180deg, rgba(255, 203, 5, 0.12), white 38%);
+        }
+
+        .product-card[data-network="MTN"].active {
+            border-color: #d4a700;
+            box-shadow: 0 10px 20px rgba(212, 167, 0, 0.18);
+        }
+
+        .product-card[data-network="Telecel"] {
+            background: linear-gradient(180deg, rgba(227, 27, 35, 0.10), white 38%);
+        }
+
+        .product-card[data-network="Telecel"].active {
+            border-color: #b91c1c;
+            box-shadow: 0 10px 20px rgba(185, 28, 28, 0.16);
+        }
+
+        .product-card[data-network="AirtelTigo"] {
+            background: linear-gradient(180deg, rgba(30, 64, 175, 0.08), rgba(239, 68, 68, 0.08) 28%, white 42%);
+        }
+
+        .product-card[data-network="AirtelTigo"].active {
+            border-color: #1e3a8a;
+            box-shadow: 0 10px 20px rgba(30, 58, 138, 0.16);
         }
 
         .product-meta {
@@ -350,16 +416,16 @@
             <div class="hero-grid">
                 <div>
                     <span class="eyebrow">Instant Data Checkout</span>
-                    <h1>Buy data bundles in a few taps.</h1>
+                    <h1>Buy mini data bundles at 50% discount.</h1>
                     <p>
                         Pick a bundle, enter the recipient number, and complete payment securely.
-                        We queue delivery after payment so every order has a clear audit trail.
+                        We queue delivery after payment so every order stays clear, trackable, and secure.
                     </p>
                 </div>
                 <div class="hero-stats">
                     <div class="stat">
                         <strong>MTN, Telecel, AirtelTigo</strong>
-                        <span class="tiny">Live bundle catalog powered by your backend</span>
+                        <span class="tiny">Packets of data bundle powered by Datanet®</span>
                     </div>
                     <div class="stat">
                         <strong>Pay first, deliver second</strong>
@@ -376,7 +442,7 @@
                 <div class="section-head">
                     <div>
                         <h2>Choose a bundle</h2>
-                        <p>Pick a network first, then choose one bundle to check out on Paystack.</p>
+                        <p>Pick a network first, then choose one bundle to purchase.</p>
                     </div>
                 </div>
                 <div id="network-filters" class="network-filters"></div>
@@ -386,12 +452,12 @@
 
             <div style="display: grid; gap: 16px;">
                 <section class="panel">
-                    <div class="section-head">
-                        <div>
-                            <h2>Checkout</h2>
-                            <p>Your amount comes from the product stored in the database.</p>
-                        </div>
+                <div class="section-head">
+                    <div>
+                        <h2>Checkout</h2>
+                        <p>Your total updates automatically from the bundle you select.</p>
                     </div>
+                </div>
 
                     <form id="checkout-form">
                         <label for="email">Email address</label>
@@ -412,7 +478,7 @@
                     <div class="section-head">
                         <div>
                             <h2>Track an order</h2>
-                            <p>Check payment and fulfillment status by reference.</p>
+                            <p>Use your order reference to check payment and delivery status.</p>
                         </div>
                     </div>
 
@@ -478,6 +544,7 @@
                 button.type = "button";
                 button.className = "network-chip";
                 button.textContent = network;
+                button.dataset.network = network;
 
                 if (network === selectedNetwork) {
                     button.classList.add("active");
@@ -505,6 +572,7 @@
                 const card = document.createElement("button");
                 card.type = "button";
                 card.className = "product-card";
+                card.dataset.network = product.network;
                 if (product.id === selectedProductId) {
                     card.classList.add("active");
                 }
@@ -515,7 +583,7 @@
                         <span class="price">GHS ${Number(product.retail_price).toFixed(2)}</span>
                     </div>
                     <h3>${product.name}</h3>
-                    <p class="helper">${product.data_amount} GB bundle ready for checkout.</p>
+                    <p class="helper">${product.data_amount} GB bundle ready for delivery.</p>
                 `;
 
                 card.addEventListener("click", () => {
