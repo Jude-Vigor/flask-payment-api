@@ -1,4 +1,4 @@
-# Payments API
+# Commerce fufilment API
 
 Production-style Flask backend for digital product checkout, payment verification, and post-payment fulfillment processing.
 
