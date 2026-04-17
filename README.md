@@ -198,7 +198,7 @@ DATABASE_URL=sqlite:///app.db
 PAYSTACK_SECRET_KEY=sk_test_or_live_key
 BASE_URL=http://127.0.0.1:5000
 INSTANTDATAGH_API_KEY=your_vendor_api_key
-INSTANTDATAGH_BASE_URL=https://instantdatagh.com/api.php
+INSTANTDATAGH_BASE_URL=your_vendor_base_url
 AUTO_CREATE_TABLES=true
 ```
 
