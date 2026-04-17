@@ -12,3 +12,4 @@ venv/
 *.db
 *.sqlite
 *.log
+Q_A.py

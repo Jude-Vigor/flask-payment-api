@@ -1,196 +1,258 @@
 # Payments API
 
-Flask application for selling mobile data bundles with:
-- Paystack for payments
-- InstantDataGH for bundle fulfillment
-- an admin dashboard for monitoring and manual reconciliation
+Production-style Flask backend for digital product checkout, payment verification, and post-payment fulfillment processing.
 
-## What This Project Does
+## Overview
 
-The app allows a customer to:
-- open a public storefront
-- choose a data bundle
-- enter email and recipient phone number
-- pay through Paystack
-- track order status later
+This repository implements a backend for digital service delivery. The application exposes a public checkout flow, persists products, orders, and payment records in a relational database, verifies Paystack payments via callback and webhook, and processes post-payment fulfillment in a separate worker loop with retry scheduling. In production, it is configured to run against PostgreSQL.
 
-The app allows an admin to:
-- log in
-- view orders
-- see payment and fulfillment status
-- manually mark orders as delivered or failed
+The project is currently deployed on Railway. The repository also includes process examples for a traditional VPS deployment using Gunicorn, systemd, and Nginx.
 
-## Main Flow
+## Key Features
 
-1. Customer selects a bundle.
-2. The app creates an order.
-3. Paystack handles payment.
-4. Payment is verified by callback or webhook.
-5. A fulfillment job is queued.
-6. A worker sends the request to InstantDataGH.
-7. Admin can manually confirm final delivery if needed.
+- Database-backed product catalog, orders, payment transactions, fulfillment jobs, and fulfillment attempts
+- Server-side pricing: checkout accepts `product_id`; price is resolved from the database
+- Paystack transaction initialization and verification
+- Paystack webhook signature validation using HMAC SHA-512
+- Decoupled fulfillment pipeline: payment confirmation queues work for a background worker
+- Retry-based fulfillment processing with escalating retry delays
+- Order tracking endpoint for customer-side status lookup
+- Admin session login, dashboard view, payment filtering, and manual reconciliation actions
+- Flask CLI commands for migrations, product seeding, worker execution, and launch-readiness checks
 
-## Project Docs
+## Tech Stack
 
-- [TECHNICAL_DOC.md](/C:/Users/DELL/Desktop/payments_api/TECHNICAL_DOC.md)
-Junior-friendly technical explanation of the project.
+- Python
+- Flask
+- Flask-SQLAlchemy
+- Flask-Migrate / Alembic
+- SQLAlchemy
+- Requests
+- PostgreSQL in production via `DATABASE_URL`, with SQLite fallback for local development
+- Gunicorn for WSGI serving
+- Railway for current deployment
 
-- [ARCHITECTURE.md](/C:/Users/DELL/Desktop/payments_api/ARCHITECTURE.md)
-High-level architecture and flow overview.
+## Architecture / Request Flow
 
-## Setup
+Core components:
 
-Install dependencies:
+- Public storefront served from Flask templates
+- API routes for checkout, verification, order tracking, and admin operations
+- Relational database for business state
+- Paystack for payment collection and confirmation
+- Dedicated fulfillment integration behind a service layer
+- Background fulfillment worker driven by CLI
+
+Request flow:
+
+```text
+Customer selects product
+-> POST /api/checkout
+-> backend creates Order and PaymentTransaction
+-> backend initializes Paystack transaction
+-> customer completes payment on Paystack
+-> Paystack callback or webhook confirms payment
+-> backend marks order PAID and queues FulfillmentJob
+-> worker polls due jobs
+-> worker submits order for fulfillment
+-> backend records attempt history and updates fulfillment state
+-> admin can manually mark delivered/failed when operational review is needed
+```
+
+Status model:
+
+- Payment: `PENDING` -> `PAID` or `FAILED`
+- Fulfillment: `PENDING` -> `QUEUED` -> `PROCESSING` / `RETRYING` -> `DELIVERED` or `FAILED`
+
+## API Endpoints
+
+### Public
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/` | Customer storefront |
+| `GET` | `/api/products` | List active products |
+| `POST` | `/api/checkout` | Create order and initialize Paystack checkout |
+| `GET` | `/api/payments/verify` | Verify Paystack payment and queue fulfillment |
+| `POST` | `/api/webhooks/paystack` | Receive Paystack webhook events |
+| `GET` | `/api/orders/<reference>` | Retrieve order status by reference |
+
+### Admin
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` / `POST` | `/api/login` | Admin login |
+| `GET` | `/api/logout` | Clear admin session |
+| `GET` | `/api/dashboard` | Admin dashboard |
+| `GET` | `/api/payments` | Filterable payment/order listing |
+| `GET` | `/api/fulfillment-jobs` | Queue visibility and retry status |
+| `POST` | `/api/orders/<reference>/mark-delivered` | Manual delivery reconciliation |
+| `POST` | `/api/orders/<reference>/mark-failed` | Manual failure reconciliation |
+
+## Running Locally
+
+### 1. Install dependencies
+
+Windows:
 
 ```powershell
+py -m venv venv
 venv\Scripts\python -m pip install -r requirements.txt
 ```
 
-For Linux VPS deployment, install production dependencies instead:
+macOS / Linux:
 
 ```bash
 python3 -m venv venv
 source venv/bin/activate
-pip install -r requirements-prod.txt
+pip install -r requirements.txt
 ```
 
-Add your environment variables in `.env`.
+### 2. Create `.env`
 
-Important values:
-- `SECRET_KEY`
-- `DATABASE_URL` or default SQLite
-- `PAYSTACK_SECRET_KEY`
-- `BASE_URL`
-- `INSTANTDATAGH_API_KEY`
-- `INSTANTDATAGH_BASE_URL`
-- `AUTO_CREATE_TABLES`
+Use the environment template below and set real credentials for Paystack and the fulfillment provider.
 
-## Database Commands
+### 3. Apply database migrations
 
-Apply migrations:
+Windows:
 
 ```powershell
 venv\Scripts\flask --app app db upgrade
 ```
 
-Create a new migration after changing models:
+macOS / Linux:
 
-```powershell
-venv\Scripts\flask --app app db migrate -m "Describe schema change"
-venv\Scripts\flask --app app db upgrade
+```bash
+flask --app app db upgrade
 ```
 
-Seed starter products:
+### 4. Seed products
+
+Windows:
 
 ```powershell
 venv\Scripts\flask --app app seed-products
 ```
 
-## Run the App
+macOS / Linux:
 
-Start the development server:
+```bash
+flask --app app seed-products
+```
+
+### 5. Run the web app
+
+Windows:
 
 ```powershell
 venv\Scripts\flask --app app run --debug
 ```
 
-Open in browser:
+macOS / Linux:
 
-```text
-http://127.0.0.1:5000/
+```bash
+flask --app app run --debug
 ```
 
-## Fulfillment Worker
+### 6. Run the fulfillment worker
 
-Paid orders are not sent to the vendor inline during checkout verification.
-They are queued first.
+Single-pass processing:
 
-Process queued fulfillment jobs:
+Windows:
 
 ```powershell
 venv\Scripts\flask --app app process-fulfillment --limit 10
 ```
 
-For local testing, run that command in another terminal while the app is running.
+macOS / Linux:
 
-For production, run the continuous worker command under a supervisor:
+```bash
+flask --app app process-fulfillment --limit 10
+```
+
+Continuous worker loop:
 
 ```bash
 flask --app app run-fulfillment-worker --interval-seconds 10 --limit 10
 ```
 
-## Launch Readiness Check
+### 7. Run a launch check
 
-Validate the required environment variables and confirm there is at least one active product:
-
-```powershell
-venv\Scripts\flask --app app launch-check
+```bash
+flask --app app launch-check
 ```
 
-## Key Routes
+Local default URL:
 
-### Public
-
-- `GET /`
-- `GET /api/products`
-- `POST /api/checkout`
-- `GET /api/payments/verify`
-- `GET /api/orders/<reference>`
-
-### Admin
-
-- `GET /api/login`
-- `GET /api/dashboard`
-- `GET /api/payments`
-- `GET /api/fulfillment-jobs`
-- `POST /api/orders/<reference>/mark-delivered`
-- `POST /api/orders/<reference>/mark-failed`
-
-## Quick Dev Routine
-
-Use this order:
-
-1. Install dependencies if needed
-2. Apply migrations
-3. Start the app
-4. Run the fulfillment worker if testing paid orders
-
-Commands:
-
-```powershell
-venv\Scripts\flask --app app db upgrade
-venv\Scripts\flask --app app run --debug
+```text
+http://127.0.0.1:5000/
 ```
 
-In another terminal:
+## Environment Variables
 
-```powershell
-venv\Scripts\flask --app app process-fulfillment --limit 10
+The application loads configuration from `.env` via `python-dotenv`.
+
+```env
+SECRET_KEY=replace-with-a-long-random-secret
+DATABASE_URL=sqlite:///app.db
+PAYSTACK_SECRET_KEY=sk_test_or_live_key
+BASE_URL=http://127.0.0.1:5000
+INSTANTDATAGH_API_KEY=your_vendor_api_key
+INSTANTDATAGH_BASE_URL=https://instantdatagh.com/api.php
+AUTO_CREATE_TABLES=true
 ```
 
-## Production Deployment
+Notes:
 
-Use one VPS with two supervised processes:
+- `SECRET_KEY`, `PAYSTACK_SECRET_KEY`, and `BASE_URL` are required at startup.
+- `DATABASE_URL` defaults to SQLite locally; PostgreSQL URLs are normalized to the SQLAlchemy `psycopg` driver.
+- `INSTANTDATAGH_BASE_URL` defaults to `https://instantdatagh.com/api.php`.
+- `AUTO_CREATE_TABLES=true` enables `db.create_all()` on startup; migrations are still included and should be preferred for managed environments.
 
-- web app: Gunicorn behind Nginx
-- worker: `flask --app app run-fulfillment-worker --interval-seconds 10 --limit 10`
+## Deployment
 
-Deployment examples are included here:
+Current runtime target:
 
-- [DEPLOYMENT.md](/C:/Users/DELL/Desktop/payments_api/DEPLOYMENT.md)
-- [payments-api-web.service](/C:/Users/DELL/Desktop/payments_api/deploy/systemd/payments-api-web.service)
-- [payments-api-worker.service](/C:/Users/DELL/Desktop/payments_api/deploy/systemd/payments-api-worker.service)
-- [payments-api.conf.example](/C:/Users/DELL/Desktop/payments_api/deploy/nginx/payments-api.conf.example)
+- Railway
 
-Before going live:
+Operational shape:
 
-1. Set `BASE_URL` to the public HTTPS domain.
-2. Point Paystack callback to `/api/payments/verify`.
-3. Point Paystack webhook to `/api/webhooks/paystack`.
-4. Run one real payment and confirm the order is queued and picked up by the worker.
+- Web process serving `app:app`
+- Separate worker process running `flask --app app run-fulfillment-worker --interval-seconds 10 --limit 10`
 
-## Notes
+The repository also includes example deployment assets for a VPS-style setup:
 
-- Prices come from the backend database, not the browser.
-- Payment and fulfillment are intentionally separated.
-- Final delivery confirmation is currently supported through admin manual verification.
+- `deploy/systemd/payments-api-web.service`
+- `deploy/systemd/payments-api-worker.service`
+- `deploy/nginx/payments-api.conf.example`
+
+Typical production commands:
+
+```bash
+gunicorn --bind 127.0.0.1:8000 app:app
+flask --app app run-fulfillment-worker --interval-seconds 10 --limit 10
+```
+
+Paystack should be configured with:
+
+- Callback URL: `/api/payments/verify`
+- Webhook URL: `/api/webhooks/paystack`
+
+## Reliability / Security Notes
+
+- Prices are resolved server-side from the `Product` table rather than trusting client-submitted amounts.
+- Payment confirmation is handled through both user return verification and Paystack webhooks.
+- Webhook requests are validated with the `x-paystack-signature` header.
+- Fulfillment is intentionally separated from checkout to avoid blocking user requests on vendor latency.
+- Fulfillment attempts are persisted, with retry delays of 1, 2, 5, 10, and 15 minutes and a default max of 5 attempts.
+- One fulfillment job is maintained per order, which helps constrain duplicate queue creation when payment confirmation is received more than once.
+- Admin access is session-based and password verification uses Werkzeug hash checking.
+- Manual admin reconciliation exists for final operational control when vendor-side completion needs review.
+
+## Future Improvements
+
+- Replace the polling CLI worker with a managed queue system and dedicated job broker
+- Add automated admin bootstrapping and stronger authentication controls
+- Add request rate limiting, CSRF protection for admin actions, and structured audit logging
+- Expand test coverage around webhook replay scenarios, retry behavior, and external API failure handling
+- Add vendor-side delivery confirmation callbacks if supported by the fulfillment provider
