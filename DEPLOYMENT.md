@@ -2,10 +2,19 @@
 
 ## Production Shape
 
-This project is designed to run as two separate processes on one VPS:
+The application is currently deployed on Railway with PostgreSQL as the production database.
 
-- a web process for the Flask app
-- a worker process for queued fulfillment jobs
+The live web service starts by applying database migrations and then serves the Flask app with Gunicorn:
+
+```bash
+flask --app app db upgrade && gunicorn --bind 0.0.0.0:$PORT app:app
+```
+
+The fulfillment workflow is designed to run separately from the checkout request path. For environments where a second process is available, the worker can run independently to process queued fulfillment jobs:
+
+```bash
+flask --app app run-fulfillment-worker --interval-seconds 10 --limit 10
+```
 
 The customer flow stays the same:
 
@@ -13,11 +22,11 @@ The customer flow stays the same:
 2. Paystack handles payment
 3. payment verification or webhook marks the order paid
 4. fulfillment is queued
-5. the worker submits the order to InstantDataGH
+5. the worker submits the order for downstream fulfillment
 
 ## Required Environment Variables
 
-Set these on the server before starting either process:
+Set these on the deployment target before starting the application:
 
 - `SECRET_KEY`
 - `DATABASE_URL` or the default SQLite path
@@ -28,9 +37,29 @@ Set these on the server before starting either process:
 - `AUTO_CREATE_TABLES`
 
 `BASE_URL` must be the public HTTPS domain used by customers and configured in Paystack.
-Keep the `.env` file in the project root so the Flask app and Gunicorn process can load it through `python-dotenv`.
+When deploying outside Railway, keep the `.env` file in the project root so the Flask app and Gunicorn process can load it through `python-dotenv`.
 
-## First-Time Server Setup
+## Railway Deployment
+
+Railway web start command:
+
+```bash
+flask --app app db upgrade && gunicorn --bind 0.0.0.0:$PORT app:app
+```
+
+This setup ensures:
+
+- schema migrations run on deploy/startup
+- the web application is served by Gunicorn
+- production traffic is routed through Railway using the injected `PORT`
+
+If you run a separate worker service, use:
+
+```bash
+flask --app app run-fulfillment-worker --interval-seconds 10 --limit 10
+```
+
+## VPS / Traditional Server Setup
 
 Install production dependencies:
 
@@ -79,7 +108,7 @@ The webhook is what keeps payment confirmation reliable even if the customer clo
 4. Confirm the order becomes `PAID`.
 5. Confirm a fulfillment job is created or updated.
 6. Confirm the worker logs that it processed the job.
-7. Confirm the order shows a stored vendor response and a `vendor_order_id` if InstantDataGH returns one.
+7. Confirm the order shows a stored downstream fulfillment response and a `vendor_order_id` if one is returned.
 8. Confirm the order appears in `/api/dashboard` and the queue status appears in `/api/fulfillment-jobs`.
 
 ## Included Examples

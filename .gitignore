@@ -13,3 +13,6 @@ venv/
 *.sqlite
 *.log
 Q_A.py
+.coverage
+.pytest_cache/
+htmlcov/
