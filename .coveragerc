@@ -1,0 +1,11 @@
+[run]
+omit =
+    tests/*
+    migrations/*
+    deploy/*
+    instance/*
+    venv/*
+    Q_A.py
+
+[report]
+show_missing = True
