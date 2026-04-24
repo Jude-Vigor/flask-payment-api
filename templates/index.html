@@ -25,7 +25,7 @@
 
         body {
             margin: 0;
-            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            font-family: "Avenir Next", "Century Gothic", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
             color: var(--ink);
             background: var(--bg);
         }
@@ -153,67 +153,147 @@
         }
 
         .network-filters {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 14px;
+            display: grid;
+            gap: 16px;
+            margin-bottom: 18px;
         }
 
-        .network-chip {
-            border: 1px solid var(--line);
+        .network-tile {
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.08);
             background: white;
             color: var(--ink);
-            border-radius: 999px;
-            padding: 10px 14px;
-            font-size: 0.92rem;
-            font-weight: 700;
+            border-radius: 24px;
+            padding: 0;
             cursor: pointer;
-            transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+            overflow: hidden;
+            text-align: left;
+            box-shadow: 0 14px 28px rgba(15, 23, 42, 0.10);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
         }
 
-        .network-chip.active {
-            background: var(--brand);
+        .network-tile:hover {
+            transform: translateY(-2px);
+        }
+
+        .network-tile.active {
+            border-color: rgba(15, 118, 110, 0.24);
+            box-shadow: 0 18px 34px rgba(15, 23, 42, 0.14);
+        }
+
+        .network-tile-visual {
+            min-height: 160px;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .network-tile-visual::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent 50%, rgba(255, 255, 255, 0.12));
+            mix-blend-mode: screen;
+        }
+
+        .network-tile[data-network="MTN"] .network-tile-visual {
+            background:
+                radial-gradient(circle at 20% 20%, rgba(255, 240, 160, 0.45), transparent 20%),
+                linear-gradient(135deg, #ffcb05 0%, #f4b400 100%);
+        }
+
+        .network-tile[data-network="Telecel"] .network-tile-visual {
+            background:
+                radial-gradient(circle at 20% 20%, rgba(255, 160, 160, 0.25), transparent 20%),
+                linear-gradient(135deg, #ef1f28 0%, #d10f19 100%);
+        }
+
+        .network-tile[data-network="AirtelTigo"] .network-tile-visual {
+            background: linear-gradient(135deg, #ef4444 0%, #ef4444 48%, #1d4ed8 48%, #1e40af 100%);
+        }
+
+        .network-logo {
+            position: relative;
+            z-index: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .network-logo-img {
+            display: block;
+            width: min(100%, 320px);
+            max-height: 138px;
+            object-fit: contain;
+            border-radius: 18px;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .network-logo-img.mtn-logo-img {
+            width: min(100%, 340px);
+            max-height: none;
+            border-radius: 0;
+            box-shadow: none;
+            background: transparent;
+        }
+
+        .network-logo-img.telecel-logo-img {
+            width: min(100%, 340px);
+            max-height: none;
+            border-radius: 0;
+            box-shadow: none;
+            background: transparent;
+        }
+
+        .network-logo.airteltigo-mark {
+            min-width: 250px;
+            min-height: 120px;
+            padding: 0;
+            border: none;
+            border-radius: 0;
+            background: transparent;
             color: white;
+            text-transform: none;
+            font-size: 3rem;
+            font-weight: 900;
+            letter-spacing: -0.04em;
+        }
+
+        .network-tile-copy {
+            padding: 18px 20px 20px;
+        }
+
+        .network-tile-copy h3 {
+            margin-bottom: 8px;
+            font-size: 1.9rem;
+            letter-spacing: 0.01em;
+        }
+
+        .network-tile-copy p {
+            margin-bottom: 16px;
+            color: var(--muted);
+            font-size: 0.98rem;
+        }
+
+        .network-tile-cta {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 132px;
+            padding: 12px 18px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: white;
+            font-size: 0.96rem;
+            font-weight: 700;
+        }
+
+        .network-tile.active .network-tile-cta {
             border-color: var(--brand);
-        }
-
-        .network-chip[data-network="MTN"] {
-            background: #ffcb05;
-            border-color: #d4a700;
-            color: #111827;
-        }
-
-        .network-chip[data-network="MTN"].active {
-            background: #111827;
-            border-color: #111827;
-            color: #ffcb05;
-            box-shadow: 0 8px 18px rgba(17, 24, 39, 0.18);
-        }
-
-        .network-chip[data-network="Telecel"] {
-            background: #e31b23;
-            border-color: #b91c1c;
-            color: white;
-        }
-
-        .network-chip[data-network="Telecel"].active {
-            background: #7f1d1d;
-            border-color: #7f1d1d;
-            color: #fee2e2;
-            box-shadow: 0 8px 18px rgba(127, 29, 29, 0.18);
-        }
-
-        .network-chip[data-network="AirtelTigo"] {
-            background: linear-gradient(135deg, #ef4444 0%, #ef4444 50%, #1e3a8a 50%, #1e40af 100%);
-            border-color: #1e3a8a;
-            color: white;
-        }
-
-        .network-chip[data-network="AirtelTigo"].active {
-            background: linear-gradient(135deg, #991b1b 0%, #991b1b 50%, #1e3a8a 50%, #172554 100%);
-            border-color: #172554;
-            color: #f8fafc;
-            box-shadow: 0 8px 18px rgba(30, 58, 138, 0.18);
+            color: var(--brand-dark);
         }
 
         .products {
@@ -221,70 +301,74 @@
             gap: 12px;
         }
 
-        .product-card {
+        .package-picker {
+            padding: 18px;
+            border-radius: 20px;
             background: white;
             border: 1px solid var(--line);
-            border-radius: 18px;
-            padding: 14px;
-            transition: transform 0.2s ease, border-color 0.2s ease;
-            cursor: pointer;
         }
 
-        .product-card.active {
-            border-color: var(--brand);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 18px rgba(15, 118, 110, 0.10);
-        }
-
-        .product-card[data-network="MTN"] {
-            background: linear-gradient(180deg, rgba(255, 203, 5, 0.12), white 38%);
-        }
-
-        .product-card[data-network="MTN"].active {
-            border-color: #d4a700;
-            box-shadow: 0 10px 20px rgba(212, 167, 0, 0.18);
-        }
-
-        .product-card[data-network="Telecel"] {
-            background: linear-gradient(180deg, rgba(227, 27, 35, 0.10), white 38%);
-        }
-
-        .product-card[data-network="Telecel"].active {
-            border-color: #b91c1c;
-            box-shadow: 0 10px 20px rgba(185, 28, 28, 0.16);
-        }
-
-        .product-card[data-network="AirtelTigo"] {
-            background: linear-gradient(180deg, rgba(30, 64, 175, 0.08), rgba(239, 68, 68, 0.08) 28%, white 42%);
-        }
-
-        .product-card[data-network="AirtelTigo"].active {
-            border-color: #1e3a8a;
-            box-shadow: 0 10px 20px rgba(30, 58, 138, 0.16);
-        }
-
-        .product-meta {
+        .package-picker-top {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
+            gap: 12px;
+            margin-bottom: 14px;
         }
 
-        .badge {
+        .package-network-pill {
             display: inline-flex;
             align-items: center;
-            padding: 6px 10px;
+            justify-content: center;
+            min-width: 82px;
+            min-height: 40px;
+            padding: 8px 14px;
             border-radius: 999px;
-            background: rgba(245, 158, 11, 0.14);
-            color: #92400e;
-            font-size: 12px;
-            font-weight: 700;
+            font-size: 0.92rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
 
-        .price {
-            font-size: 1.15rem;
-            font-weight: 700;
+        .package-network-pill[data-network="MTN"] {
+            background: #ffcb05;
+            color: #111827;
+        }
+
+        .package-network-pill[data-network="Telecel"] {
+            background: #ef1f28;
+            color: white;
+        }
+
+        .package-network-pill[data-network="AirtelTigo"] {
+            background: linear-gradient(135deg, #ef4444 0%, #ef4444 50%, #1e40af 50%, #1e40af 100%);
+            color: white;
+        }
+
+        .package-picker-note {
+            color: var(--muted);
+            font-size: 0.92rem;
+        }
+
+        select {
+            width: 100%;
+            padding: 15px 16px;
+            border: 2px solid #3b82f6;
+            border-radius: 16px;
+            background: white;
+            color: var(--ink);
+            font-size: 1rem;
+            margin-bottom: 12px;
+        }
+
+        select:focus {
+            outline: 3px solid rgba(59, 130, 246, 0.18);
+        }
+
+        .package-caption {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.92rem;
         }
 
         label {
@@ -392,7 +476,7 @@
                 align-items: start;
             }
 
-            .products {
+            .network-filters {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
         }
@@ -404,7 +488,7 @@
                 inset: auto -24px -24px auto;
             }
 
-            .product-card.active {
+            .network-tile:hover {
                 transform: none;
             }
         }
@@ -441,17 +525,17 @@
             <div class="panel">
                 <div class="section-head">
                     <div>
-                        <h2>Choose a bundle</h2>
-                        <p>Pick a network first, then choose one bundle to purchase.</p>
+                        <h2>Choose a network</h2>
+                        <p>Select your network, then pick a package from the menu below.</p>
                     </div>
                 </div>
                 <div id="network-filters" class="network-filters"></div>
-                <div id="products" class="products"></div>
+                <div id="package-selection" class="products"></div>
                 <p id="products-empty" class="empty" hidden>No active products are available right now.</p>
             </div>
 
             <div style="display: grid; gap: 16px;">
-                <section class="panel">
+                <section id="checkout-panel" class="panel">
                 <div class="section-head">
                     <div>
                         <h2>Checkout</h2>
@@ -495,7 +579,7 @@
     </main>
 
     <script>
-        const productsEl = document.getElementById("products");
+        const productsEl = document.getElementById("package-selection");
         const emptyEl = document.getElementById("products-empty");
         const selectedProductEl = document.getElementById("selected-product");
         const checkoutButton = document.getElementById("checkout-button");
@@ -507,6 +591,13 @@
         let products = [];
         let selectedProductId = null;
         let selectedNetwork = null;
+
+        function scrollToPackageSelection() {
+            const packageSelection = document.getElementById("package-selection");
+            if (packageSelection) {
+                packageSelection.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+        }
 
         function getVisibleProducts() {
             if (!selectedNetwork) {
@@ -534,6 +625,28 @@
             `;
         }
 
+        function getNetworkLogoMarkup(network) {
+            if (network === "MTN") {
+                return `
+                    <span class="network-logo" aria-hidden="true">
+                        <img class="network-logo-img mtn-logo-img" src="/static/images/mtn-logo.png" alt="MTN logo">
+                    </span>
+                `;
+            }
+
+            if (network === "Telecel") {
+                return `
+                    <span class="network-logo" aria-hidden="true">
+                        <img class="network-logo-img telecel-logo-img" src="/static/images/telecel-logo.png" alt="Telecel logo">
+                    </span>
+                `;
+            }
+
+            return `
+                <span class="network-logo airteltigo-mark" aria-hidden="true">AirtelTigo</span>
+            `;
+        }
+
         function renderNetworkFilters() {
             networkFiltersEl.innerHTML = "";
 
@@ -542,13 +655,23 @@
             networks.forEach(network => {
                 const button = document.createElement("button");
                 button.type = "button";
-                button.className = "network-chip";
-                button.textContent = network;
+                button.className = "network-tile";
                 button.dataset.network = network;
 
                 if (network === selectedNetwork) {
                     button.classList.add("active");
                 }
+
+                button.innerHTML = `
+                    <div class="network-tile-visual">
+                        ${getNetworkLogoMarkup(network)}
+                    </div>
+                    <div class="network-tile-copy">
+                        <h3>${network}</h3>
+                        <p>Choose the plan that's right for you.</p>
+                        <span class="network-tile-cta">Buy now</span>
+                    </div>
+                `;
 
                 button.addEventListener("click", () => {
                     selectedNetwork = network;
@@ -557,6 +680,7 @@
                     renderNetworkFilters();
                     renderProducts();
                     renderSelectedProduct();
+                    scrollToPackageSelection();
                 });
 
                 networkFiltersEl.appendChild(button);
@@ -568,32 +692,40 @@
             const visibleProducts = getVisibleProducts();
             emptyEl.hidden = visibleProducts.length !== 0;
 
+             if (visibleProducts.length === 0) {
+                return;
+            }
+
+            const picker = document.createElement("div");
+            picker.className = "package-picker";
+            picker.innerHTML = `
+                <div class="package-picker-top">
+                    <span class="package-network-pill" data-network="${selectedNetwork}">${selectedNetwork}</span>
+                    <span class="package-picker-note">Choose Package</span>
+                </div>
+                <label for="package-select">Select package</label>
+                <select id="package-select"></select>
+                <p class="package-caption">Your total updates automatically based on the selected bundle.</p>
+            `;
+
+            const selectEl = picker.querySelector("#package-select");
+
             visibleProducts.forEach(product => {
-                const card = document.createElement("button");
-                card.type = "button";
-                card.className = "product-card";
-                card.dataset.network = product.network;
+                const option = document.createElement("option");
+                option.value = String(product.id);
+                option.textContent = `${product.data_amount}GB - GHS ${Number(product.retail_price).toFixed(2)}`;
                 if (product.id === selectedProductId) {
-                    card.classList.add("active");
+                    option.selected = true;
                 }
-
-                card.innerHTML = `
-                    <div class="product-meta">
-                        <span class="badge">${product.network}</span>
-                        <span class="price">GHS ${Number(product.retail_price).toFixed(2)}</span>
-                    </div>
-                    <h3>${product.name}</h3>
-                    <p class="helper">${product.data_amount} GB bundle ready for delivery.</p>
-                `;
-
-                card.addEventListener("click", () => {
-                    selectedProductId = product.id;
-                    renderProducts();
-                    renderSelectedProduct();
-                });
-
-                productsEl.appendChild(card);
+                selectEl.appendChild(option);
             });
+
+            selectEl.addEventListener("change", (event) => {
+                selectedProductId = Number(event.target.value);
+                renderSelectedProduct();
+            });
+
+            productsEl.appendChild(picker);
         }
 
         async function loadProducts() {
