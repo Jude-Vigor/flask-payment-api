@@ -6,7 +6,7 @@ Production-style Flask backend for digital product checkout, payment verificatio
 
 This repository implements a backend for digital service delivery. The application exposes a public checkout flow, persists products, orders, and payment records in a relational database, verifies Paystack payments via callback and webhook, and processes post-payment fulfillment in a separate worker loop with retry scheduling. In production, it is configured to run against PostgreSQL.
 
-The project is currently deployed on Railway. The repository also includes process examples for a traditional VPS deployment using Gunicorn, systemd, and Nginx.
+The project is currently deployed on Railway with PostgreSQL. The web service runs database migrations on startup and serves the Flask application with Gunicorn. The repository also includes process examples for a traditional VPS deployment using Gunicorn, systemd, and Nginx.
 
 ## Key Features
 
@@ -182,6 +182,20 @@ flask --app app run-fulfillment-worker --interval-seconds 10 --limit 10
 flask --app app launch-check
 ```
 
+### 8. Run the test suite
+
+Install development dependencies:
+
+```bash
+pip install -r requirements-dev.txt
+```
+
+Run tests with coverage:
+
+```bash
+pytest
+```
+
 Local default URL:
 
 ```text
@@ -217,7 +231,7 @@ Current runtime target:
 
 Operational shape:
 
-- Web process serving `app:app`
+- Web process running `flask --app app db upgrade && gunicorn --bind 0.0.0.0:$PORT app:app`
 - Separate worker process running `flask --app app run-fulfillment-worker --interval-seconds 10 --limit 10`
 
 The repository also includes example deployment assets for a VPS-style setup:
@@ -231,6 +245,12 @@ Typical production commands:
 ```bash
 gunicorn --bind 127.0.0.1:8000 app:app
 flask --app app run-fulfillment-worker --interval-seconds 10 --limit 10
+```
+
+Current Railway start command:
+
+```bash
+flask --app app db upgrade && gunicorn --bind 0.0.0.0:$PORT app:app
 ```
 
 Paystack should be configured with:
@@ -248,6 +268,12 @@ Paystack should be configured with:
 - One fulfillment job is maintained per order, which helps constrain duplicate queue creation when payment confirmation is received more than once.
 - Admin access is session-based and password verification uses Werkzeug hash checking.
 - Manual admin reconciliation exists for final operational control when vendor-side completion needs review.
+
+## Testing
+
+- `pytest`-based test suite covering payment routes, webhook validation, fulfillment processing, admin flows, and CLI commands
+- Current measured backend coverage: `81%`
+- Current test result baseline: `24 passed`
 
 ## Future Improvements
 
