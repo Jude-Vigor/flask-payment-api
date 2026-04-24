@@ -21,6 +21,16 @@ DEFAULT_PRODUCTS = [
     {"name": "MTN 40GB", "network": "MTN", "data_amount": "40", "retail_price": "170.20"},
     {"name": "MTN 50GB", "network": "MTN", "data_amount": "50", "retail_price": "208.70"},
     {"name": "MTN 100GB", "network": "MTN", "data_amount": "100", "retail_price": "369.20"},
+    {"name": "Telecel 10GB", "network": "Telecel", "data_amount": "10", "retail_price": "41.00"},
+    {"name": "Telecel 15GB", "network": "Telecel", "data_amount": "15", "retail_price": "60.00"},
+    {"name": "Telecel 20GB", "network": "Telecel", "data_amount": "20", "retail_price": "80.00"},
+    {"name": "Telecel 25GB", "network": "Telecel", "data_amount": "25", "retail_price": "99.00"},
+    {"name": "Telecel 30GB", "network": "Telecel", "data_amount": "30", "retail_price": "117.00"},
+    {"name": "Telecel 35GB", "network": "Telecel", "data_amount": "35", "retail_price": "136.00"},
+    {"name": "Telecel 40GB", "network": "Telecel", "data_amount": "40", "retail_price": "156.00"},
+    {"name": "Telecel 45GB", "network": "Telecel", "data_amount": "45", "retail_price": "175.00"},
+    {"name": "Telecel 50GB", "network": "Telecel", "data_amount": "50", "retail_price": "194.00"},
+    {"name": "Telecel 100GB", "network": "Telecel", "data_amount": "100", "retail_price": "390.00"},
 ]
 
 
