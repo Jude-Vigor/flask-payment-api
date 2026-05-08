@@ -16,8 +16,8 @@ def login_as_admin(client, admin_user):
 def test_home_page_loads(client):
     response = client.get("/")
 
-    assert response.status_code == 200
-    assert "Checkout" in response.get_data(as_text=True)
+    assert response.status_code == 503
+    assert "temporarily unavailable" in response.get_data(as_text=True)
 
 
 def test_dashboard_redirects_when_not_logged_in(client):

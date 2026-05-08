@@ -17,6 +17,7 @@ class Config:
     SQLALCHEMY_DATABASE_URI = _database_uri()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     AUTO_CREATE_TABLES = os.getenv("AUTO_CREATE_TABLES", "true").lower() == "true"
+    MAINTENANCE_MODE = os.getenv("MAINTENANCE_MODE", "true").lower() == "true"
 
     SECRET_KEY = os.getenv("SECRET_KEY")
     PAYSTACK_SECRET_KEY = os.getenv("PAYSTACK_SECRET_KEY")

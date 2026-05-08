@@ -102,6 +102,9 @@ def create_app():
 
     @app.get("/")
     def home():
+        if app.config["MAINTENANCE_MODE"]:
+            return render_template("maintenance.html"), 503
+
         return render_template("index.html")
 
     register_commands(app)
