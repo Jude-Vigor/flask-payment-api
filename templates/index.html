@@ -564,14 +564,6 @@
 
         <section id="payment-banner" class="banner" hidden></section>
 
-        <section class="service-banner" aria-live="polite">
-            <h2>MTN service notice</h2>
-            <p>
-                MTN data bundle orders are temporarily unavailable while we work  to resolve a fulfillment delay.
-                Telecel orders remain available, and we will restore MTN as soon as service is stable.
-            </p>
-        </section>
-
         <section class="content-grid" style="margin-top: 16px;">
             <div class="panel">
                 <div class="section-head">
@@ -638,16 +630,18 @@
         const paymentBannerEl = document.getElementById("payment-banner");
         const networkFiltersEl = document.getElementById("network-filters");
         const queryParams = new URLSearchParams(window.location.search);
-        const unavailableNetworks = {
-            MTN: "MTN orders are temporarily unavailable while our vendor resolves a fulfillment delay."
-        };
+        const unavailableNetworks = new Set({{ disabled_data_purchase_networks | tojson }});
 
         let products = [];
         let selectedProductId = null;
         let selectedNetwork = null;
 
         function isNetworkUnavailable(network) {
-            return Boolean(unavailableNetworks[network]);
+            return unavailableNetworks.has(network);
+        }
+
+        function getUnavailableNetworkMessage(network) {
+            return `${network} data purchases are temporarily unavailable.`;
         }
 
         function scrollToPackageSelection() {
@@ -675,7 +669,7 @@
             if (!product) {
                 selectedProductEl.className = "status-box";
                 selectedProductEl.innerHTML = selectedNetwork && isNetworkUnavailable(selectedNetwork)
-                    ? unavailableNetworks[selectedNetwork]
+                    ? getUnavailableNetworkMessage(selectedNetwork)
                     : "No product selected yet.";
                 return;
             }
@@ -739,7 +733,7 @@
                     </div>
                     <div class="network-tile-copy">
                         <h3>${network}</h3>
-                        <p>${unavailable ? unavailableNetworks[network] : "Choose the plan that's right for you."}</p>
+                        <p>${unavailable ? getUnavailableNetworkMessage(network) : "Choose the plan that's right for you."}</p>
                         <span class="network-tile-cta">${unavailable ? "Unavailable" : "Buy now"}</span>
                     </div>
                 `;
@@ -820,7 +814,7 @@
             if (!selectedProductId) {
                 selectedProductEl.className = "status-box error";
                 selectedProductEl.textContent = selectedNetwork && isNetworkUnavailable(selectedNetwork)
-                    ? unavailableNetworks[selectedNetwork]
+                    ? getUnavailableNetworkMessage(selectedNetwork)
                     : "Select a product before checking out.";
                 return;
             }

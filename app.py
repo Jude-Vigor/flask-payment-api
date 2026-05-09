@@ -105,7 +105,10 @@ def create_app():
         if app.config["MAINTENANCE_MODE"]:
             return render_template("maintenance.html"), 503
 
-        return render_template("index.html")
+        return render_template(
+            "index.html",
+            disabled_data_purchase_networks=app.config["DISABLED_DATA_PURCHASE_NETWORKS"],
+        )
 
     register_commands(app)
 
