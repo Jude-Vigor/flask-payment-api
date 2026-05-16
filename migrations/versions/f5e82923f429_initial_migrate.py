@@ -1,8 +1,8 @@
-"""Create initial commerce schema
+"""initial migrate
 
-Revision ID: 9f3497e16874
+Revision ID: f5e82923f429
 Revises: 
-Create Date: 2026-03-25 20:17:46.115732
+Create Date: 2026-05-16 18:56:51.016441
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '9f3497e16874'
+revision = 'f5e82923f429'
 down_revision = None
 branch_labels = None
 depends_on = None
