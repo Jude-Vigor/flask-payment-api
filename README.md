@@ -238,7 +238,7 @@ Notes:
 
 - `SECRET_KEY`, `PAYSTACK_SECRET_KEY`, and `BASE_URL` are required at startup.
 - `DATABASE_URL` defaults to SQLite locally; PostgreSQL URLs are normalized to the SQLAlchemy `psycopg` driver.
-- `INSTANTDATAGH_BASE_URL` defaults to `https://instantdatagh.com/api.php`.
+- `INSTANTDATAGH_BASE_URL` must point to the configured fulfillment provider API base URL.
 - `AUTO_CREATE_TABLES=true` enables `db.create_all()` on startup; migrations are still included and should be preferred for managed environments.
 
 ## Deployment
