@@ -3,9 +3,9 @@ from flask import current_app
 
 
 def _headers():
-    api_key = current_app.config.get("INSTANTDATAGH_API_KEY")
+    api_key = current_app.config.get("VENDOR_API_KEY")
     if not api_key:
-        raise RuntimeError("Missing INSTANTDATAGH_API_KEY in environment configuration.")
+        raise RuntimeError("Missing VENDOR_API_KEY in environment configuration.")
 
     return {
         "x-api-key": api_key,
@@ -14,7 +14,11 @@ def _headers():
 
 
 def create_order(network, phone_number, data_amount):
-    url = f"{current_app.config['INSTANTDATAGH_BASE_URL'].rstrip('/')}/orders"
+    base_url = current_app.config.get("VENDOR_BASE_URL")
+    if not base_url:
+        raise RuntimeError("Missing VENDOR_BASE_URL in environment configuration.")
+
+    url = f"{base_url.rstrip('/')}/orders"
     payload = {
         "network": network,
         "phone_number": phone_number,

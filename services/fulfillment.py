@@ -5,7 +5,7 @@ from flask import current_app
 
 from extensions import db
 from models import FulfillmentAttempt, FulfillmentJob, Order
-from services.instantdatagh import create_order as create_vendor_order
+from services.vendor_fulfillment import create_order as create_vendor_order
 
 VALID_NETWORKS = {"MTN", "AirtelTigo", "Telecel"}
 

@@ -206,10 +206,10 @@ flask --app app launch-check
 
 ### 8. Run the test suite
 
-Install development dependencies:
+Install dependencies:
 
 ```bash
-pip install -r requirements-dev.txt
+pip install -r requirements.txt
 ```
 
 Run tests with coverage:
@@ -233,8 +233,8 @@ SECRET_KEY=replace-with-a-long-random-secret
 DATABASE_URL=sqlite:///app.db
 PAYSTACK_SECRET_KEY=sk_test_or_live_key
 BASE_URL=http://127.0.0.1:5000
-INSTANTDATAGH_API_KEY=your_vendor_api_key
-INSTANTDATAGH_BASE_URL=your_vendor_base_url
+VENDOR_API_KEY=your_vendor_api_key
+VENDOR_BASE_URL=your_vendor_base_url
 AUTO_CREATE_TABLES=true
 ```
 
@@ -242,7 +242,7 @@ Notes:
 
 - `SECRET_KEY`, `PAYSTACK_SECRET_KEY`, and `BASE_URL` are required at startup.
 - `DATABASE_URL` defaults to SQLite locally; PostgreSQL URLs are normalized to the SQLAlchemy `psycopg` driver.
-- `INSTANTDATAGH_BASE_URL` must point to the configured fulfillment provider API base URL.
+- `VENDOR_BASE_URL` must point to the configured fulfillment provider API base URL.
 - `AUTO_CREATE_TABLES=true` enables `db.create_all()` on startup; migrations are still included and should be preferred for managed environments.
 
 ## Deployment

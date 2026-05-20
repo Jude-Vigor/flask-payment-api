@@ -9,8 +9,9 @@ os.environ["PAYSTACK_SECRET_KEY"] = "test-paystack-secret"
 os.environ["BASE_URL"] = "http://localhost:5000"
 os.environ["DATABASE_URL"] = "sqlite:///test_app.db"
 os.environ["AUTO_CREATE_TABLES"] = "false"
-os.environ["INSTANTDATAGH_API_KEY"] = "test-vendor-key"
-os.environ["INSTANTDATAGH_BASE_URL"] = "https://example.com"
+os.environ["MAINTENANCE_MODE"] = "true"
+os.environ["VENDOR_API_KEY"] = "test-vendor-key"
+os.environ["VENDOR_BASE_URL"] = "https://example.com"
 
 from app import create_app
 from extensions import db

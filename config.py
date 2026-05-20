@@ -31,8 +31,8 @@ class Config:
     SECRET_KEY = os.getenv("SECRET_KEY")
     PAYSTACK_SECRET_KEY = os.getenv("PAYSTACK_SECRET_KEY")
     BASE_URL = os.getenv("BASE_URL")
-    INSTANTDATAGH_BASE_URL = os.getenv("INSTANTDATAGH_BASE_URL")
-    INSTANTDATAGH_API_KEY = os.getenv("INSTANTDATAGH_API_KEY")
+    VENDOR_BASE_URL = os.getenv("VENDOR_BASE_URL")
+    VENDOR_API_KEY = os.getenv("VENDOR_API_KEY")
 
     if not SECRET_KEY:
         raise ValueError("Missing SECRET_KEY in .env")

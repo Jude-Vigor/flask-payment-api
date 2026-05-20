@@ -11,7 +11,7 @@ It allows a customer to:
 - choose a bundle
 - enter email and phone number
 - pay through Paystack
-- have the order queued for delivery through InstantDataGH
+- have the order queued for delivery through the fulfillment provider
 - track the order later using the order reference
 
 It also allows an admin to:
@@ -27,67 +27,67 @@ The system works in this order:
 2. The app creates an order and starts a Paystack payment.
 3. Paystack confirms the payment.
 4. The app queues the order for fulfillment.
-5. A fulfillment worker sends the order to InstantDataGH.
+5. A fulfillment worker sends the order to the fulfillment provider.
 6. The admin can manually confirm final delivery status if needed.
 
 If you want a flow-only view, read:
-- [ARCHITECTURE.md](/C:/Users/DELL/Desktop/payments_api/ARCHITECTURE.md)
+- [ARCHITECTURE.md](ARCHITECTURE.md)
 
 ## 3. Project Structure
 
 ### Core Files
 
-- [app.py](/C:/Users/DELL/Desktop/payments_api/app.py)
+- [app.py](../app.py)
 Starts the Flask application, loads config, registers routes, and adds custom CLI commands.
 
-- [config.py](/C:/Users/DELL/Desktop/payments_api/config.py)
+- [config.py](../config.py)
 Stores environment-based settings like database URL, Paystack keys, and vendor configuration.
 
-- [extensions.py](/C:/Users/DELL/Desktop/payments_api/extensions.py)
+- [extensions.py](../extensions.py)
 Creates shared Flask extensions:
 `db` for SQLAlchemy and `migrate` for Flask-Migrate.
 
 ### Data Layer
 
-- [models.py](/C:/Users/DELL/Desktop/payments_api/models.py)
+- [models.py](../models.py)
 Defines the database tables used by the project.
 
 ### Routes
 
-- [routes/payment.py](/C:/Users/DELL/Desktop/payments_api/routes/payment.py)
+- [routes/payment.py](../routes/payment.py)
 Contains the API routes, admin routes, and checkout/payment flow.
 
 ### Services
 
-- [services/paystack.py](/C:/Users/DELL/Desktop/payments_api/services/paystack.py)
+- [services/paystack.py](../services/paystack.py)
 Handles Paystack transaction initialization and verification.
 
-- [services/instantdatagh.py](/C:/Users/DELL/Desktop/payments_api/services/instantdatagh.py)
-Handles sending data bundle purchase requests to InstantDataGH.
+- [services/vendor_fulfillment.py](../services/vendor_fulfillment.py)
+Handles sending data bundle purchase requests to the fulfillment provider.
 
-- [services/fulfillment.py](/C:/Users/DELL/Desktop/payments_api/services/fulfillment.py)
+- [services/fulfillment.py](../services/fulfillment.py)
 Handles fulfillment queueing, retries, and vendor submission.
 
-- [services/product_seed.py](/C:/Users/DELL/Desktop/payments_api/services/product_seed.py)
+- [services/product_seed.py](../services/product_seed.py)
 Seeds default products into the database.
 
 ### Utilities
 
-- [utils/security.py](/C:/Users/DELL/Desktop/payments_api/utils/security.py)
+- [utils/security.py](../utils/security.py)
 Verifies Paystack webhook signatures.
 
-- [utils/decorators.py](/C:/Users/DELL/Desktop/payments_api/utils/decorators.py)
+- [utils/decorators.py](../utils/decorators.py)
 Contains the `admin_required` decorator for protecting admin routes.
 
 ### Templates
 
-- [templates/index.html](/C:/Users/DELL/Desktop/payments_api/templates/index.html)
+- [templates/index.html](../templates/index.html)
 Public customer-facing storefront.
 
-- [templates/dashboard.html](/C:/Users/DELL/Desktop/payments_api/templates/dashboard.html)
+- [templates/dashboard.html](../templates/dashboard.html)
 Admin dashboard.
 
-- [templates/login.html](/C:/Users/DELL/Desktop/payments_api/templates/login.html)
+- [templates/login.html](../templates/login.html)
 Admin login page.
 
 ## 4. Database Models
@@ -139,7 +139,7 @@ This is what the worker processes after payment has been confirmed.
 
 ### FulfillmentAttempt
 
-Stores each attempt to send an order to InstantDataGH.
+Stores each attempt to send an order to the fulfillment provider.
 
 Useful for:
 - debugging
@@ -225,7 +225,7 @@ The worker processes queued fulfillment jobs.
 
 The worker:
 1. selects due jobs for paid orders
-2. calls InstantDataGH
+2. calls the fulfillment provider
 3. records a fulfillment attempt
 4. updates order status
 5. retries failed attempts with delay
@@ -286,7 +286,7 @@ Admin manually marks an order as failed.
 
 ### Public Page
 
-[templates/index.html](/C:/Users/DELL/Desktop/payments_api/templates/index.html)
+[templates/index.html](../templates/index.html)
 
 This page:
 - loads products from `/api/products`
@@ -296,7 +296,7 @@ This page:
 
 ### Admin Dashboard
 
-[templates/dashboard.html](/C:/Users/DELL/Desktop/payments_api/templates/dashboard.html)
+[templates/dashboard.html](../templates/dashboard.html)
 
 This page:
 - shows revenue
@@ -308,7 +308,7 @@ This page:
 
 ### Login Page
 
-[templates/login.html](/C:/Users/DELL/Desktop/payments_api/templates/login.html)
+[templates/login.html](../templates/login.html)
 
 Simple admin login form.
 
@@ -330,10 +330,10 @@ Used for Paystack API requests.
 - `BASE_URL`
 Used when generating the Paystack callback URL.
 
-- `INSTANTDATAGH_API_KEY`
+- `VENDOR_API_KEY`
 Used for vendor API authentication.
 
-- `INSTANTDATAGH_BASE_URL`
+- `VENDOR_BASE_URL`
 Vendor base URL.
 
 - `AUTO_CREATE_TABLES`
@@ -381,21 +381,21 @@ Examples:
 This receives HTTP requests and returns responses.
 
 Example:
-- [routes/payment.py](/C:/Users/DELL/Desktop/payments_api/routes/payment.py)
+- [routes/payment.py](../routes/payment.py)
 
 ### 3. Service Layer
 This contains business logic and external integrations.
 
 Examples:
 - Paystack service
-- InstantDataGH service
+- fulfillment provider service
 - fulfillment service
 
 ### 4. Data Layer
 This contains database models and relationships.
 
 Example:
-- [models.py](/C:/Users/DELL/Desktop/payments_api/models.py)
+- [models.py](../models.py)
 
 ## 12. Common Developer Tasks
 
@@ -403,7 +403,7 @@ Example:
 
 There are two simple ways:
 - add it manually in the database
-- add it to [product_seed.py](/C:/Users/DELL/Desktop/payments_api/services/product_seed.py) if it is a default starter product
+- add it to [product_seed.py](../services/product_seed.py) if it is a default starter product
 
 ### Change a bundle price
 
@@ -416,7 +416,7 @@ The backend should remain the source of truth.
 ### Change checkout validation
 
 Edit:
-- [routes/payment.py](/C:/Users/DELL/Desktop/payments_api/routes/payment.py)
+- [routes/payment.py](../routes/payment.py)
 
 Look for:
 - `_validate_checkout_payload`
@@ -424,28 +424,28 @@ Look for:
 ### Change Paystack logic
 
 Edit:
-- [services/paystack.py](/C:/Users/DELL/Desktop/payments_api/services/paystack.py)
+- [services/paystack.py](../services/paystack.py)
 
 ### Change vendor delivery logic
 
 Edit:
-- [services/instantdatagh.py](/C:/Users/DELL/Desktop/payments_api/services/instantdatagh.py)
-- [services/fulfillment.py](/C:/Users/DELL/Desktop/payments_api/services/fulfillment.py)
+- [services/vendor_fulfillment.py](../services/vendor_fulfillment.py)
+- [services/fulfillment.py](../services/fulfillment.py)
 
 ### Change the public frontend
 
 Edit:
-- [templates/index.html](/C:/Users/DELL/Desktop/payments_api/templates/index.html)
+- [templates/index.html](../templates/index.html)
 
 ### Change the admin dashboard
 
 Edit:
-- [templates/dashboard.html](/C:/Users/DELL/Desktop/payments_api/templates/dashboard.html)
+- [templates/dashboard.html](../templates/dashboard.html)
 
 ### Add a new database column
 
 Steps:
-1. Update [models.py](/C:/Users/DELL/Desktop/payments_api/models.py)
+1. Update [models.py](../models.py)
 2. Generate a migration
 3. Apply the migration
 
@@ -496,7 +496,7 @@ venv\Scripts\flask --app app process-fulfillment --limit 10
 
 Check:
 - `PAYSTACK_SECRET_KEY` is correct
-- request signature matches what [utils/security.py](/C:/Users/DELL/Desktop/payments_api/utils/security.py) expects
+- request signature matches what [utils/security.py](../utils/security.py) expects
 - your public `BASE_URL` is correct
 
 ### Admin dashboard redirects to login
@@ -546,7 +546,7 @@ A server-to-server callback sent automatically by another service.
 A tracked database schema change.
 
 ### Vendor
-In this project, the external data provider: InstantDataGH.
+In this project, the external data provider: fulfillment provider.
 
 ## 15. Good Engineering Decisions Already Present
 
@@ -577,7 +577,7 @@ Main idea:
 - products are stored in the database
 - customer pays through Paystack
 - paid orders are queued for fulfillment
-- vendor submission happens through InstantDataGH
+- vendor submission happens through the fulfillment provider
 - admin can manually verify final delivery status
 
 If you understand:
@@ -591,4 +591,4 @@ If you understand:
 then you understand the heart of the project.
 
 For a quick start guide, use:
-- [README.md](/C:/Users/DELL/Desktop/payments_api/README.md)
+- [README.md](../README.md)

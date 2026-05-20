@@ -32,8 +32,8 @@ Set these on the deployment target before starting the application:
 - `DATABASE_URL` or the default SQLite path
 - `PAYSTACK_SECRET_KEY`
 - `BASE_URL`
-- `INSTANTDATAGH_API_KEY`
-- `INSTANTDATAGH_BASE_URL`
+- `VENDOR_API_KEY`
+- `VENDOR_BASE_URL`
 - `AUTO_CREATE_TABLES`
 
 `BASE_URL` must be the public HTTPS domain used by customers and configured in Paystack.
@@ -66,7 +66,7 @@ Install production dependencies:
 ```bash
 python3 -m venv venv
 source venv/bin/activate
-pip install -r requirements-prod.txt
+pip install -r requirements.txt
 ```
 
 Run database setup:

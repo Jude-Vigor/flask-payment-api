@@ -15,7 +15,7 @@ This application has 5 main parts:
 2. Flask application
 3. Database
 4. Paystack
-5. InstantDataGH
+5. Fulfillment provider
 
 Simple view:
 
@@ -35,7 +35,7 @@ Flask Routes
    +--> Fulfillment Worker
            |
            v
-      InstantDataGH
+      Fulfillment provider
    |
    v
 Admin Dashboard
@@ -46,7 +46,7 @@ Admin Dashboard
 ### Customer Frontend
 
 File:
-- [templates/index.html](/C:/Users/DELL/Desktop/payments_api/templates/index.html)
+- [templates/index.html](../templates/index.html)
 
 Purpose:
 - shows available products
@@ -63,8 +63,8 @@ This frontend talks to the backend through:
 ### Flask Application
 
 Main files:
-- [app.py](/C:/Users/DELL/Desktop/payments_api/app.py)
-- [routes/payment.py](/C:/Users/DELL/Desktop/payments_api/routes/payment.py)
+- [app.py](../app.py)
+- [routes/payment.py](../routes/payment.py)
 
 Purpose:
 - serves HTML pages
@@ -80,7 +80,7 @@ This is the center of the system.
 ### Database
 
 Main file:
-- [models.py](/C:/Users/DELL/Desktop/payments_api/models.py)
+- [models.py](../models.py)
 
 Purpose:
 - stores products
@@ -95,7 +95,7 @@ The database is the source of truth for the app.
 ### Paystack
 
 Main file:
-- [services/paystack.py](/C:/Users/DELL/Desktop/payments_api/services/paystack.py)
+- [services/paystack.py](../services/paystack.py)
 
 Purpose:
 - initializes customer payment
@@ -104,16 +104,16 @@ Purpose:
 
 Paystack is only responsible for the money side.
 
-### InstantDataGH
+### Fulfillment provider
 
 Main file:
-- [services/instantdatagh.py](/C:/Users/DELL/Desktop/payments_api/services/instantdatagh.py)
+- [services/vendor_fulfillment.py](../services/vendor_fulfillment.py)
 
 Purpose:
 - receives the data order request
 - processes the data delivery request
 
-InstantDataGH is responsible for the service-delivery side.
+The fulfillment provider is responsible for the service-delivery side.
 
 ## 3. Request Flow Diagram
 
@@ -178,7 +178,7 @@ Fulfillment worker runs
 Find paid orders with pending or retrying jobs
    |
    v
-Call InstantDataGH
+Call the fulfillment provider
    |
    +--> if success:
    |       mark job completed
@@ -235,7 +235,7 @@ Backend updates order fulfillment status
 - collecting money
 - confirming payment status
 
-### What InstantDataGH is responsible for
+### What the fulfillment provider is responsible for
 
 - receiving the vendor order request
 - handling the actual data delivery request
@@ -305,29 +305,29 @@ PROCESSING -> FAILED
 ## 7. Files by Responsibility
 
 ### App bootstrap
-- [app.py](/C:/Users/DELL/Desktop/payments_api/app.py)
-- [config.py](/C:/Users/DELL/Desktop/payments_api/config.py)
-- [extensions.py](/C:/Users/DELL/Desktop/payments_api/extensions.py)
+- [app.py](../app.py)
+- [config.py](../config.py)
+- [extensions.py](../extensions.py)
 
 ### Core business flow
-- [routes/payment.py](/C:/Users/DELL/Desktop/payments_api/routes/payment.py)
-- [models.py](/C:/Users/DELL/Desktop/payments_api/models.py)
+- [routes/payment.py](../routes/payment.py)
+- [models.py](../models.py)
 
 ### Payment integration
-- [services/paystack.py](/C:/Users/DELL/Desktop/payments_api/services/paystack.py)
-- [utils/security.py](/C:/Users/DELL/Desktop/payments_api/utils/security.py)
+- [services/paystack.py](../services/paystack.py)
+- [utils/security.py](../utils/security.py)
 
 ### Fulfillment integration
-- [services/instantdatagh.py](/C:/Users/DELL/Desktop/payments_api/services/instantdatagh.py)
-- [services/fulfillment.py](/C:/Users/DELL/Desktop/payments_api/services/fulfillment.py)
+- [services/vendor_fulfillment.py](../services/vendor_fulfillment.py)
+- [services/fulfillment.py](../services/fulfillment.py)
 
 ### Admin/auth
-- [utils/decorators.py](/C:/Users/DELL/Desktop/payments_api/utils/decorators.py)
-- [templates/dashboard.html](/C:/Users/DELL/Desktop/payments_api/templates/dashboard.html)
-- [templates/login.html](/C:/Users/DELL/Desktop/payments_api/templates/login.html)
+- [utils/decorators.py](../utils/decorators.py)
+- [templates/dashboard.html](../templates/dashboard.html)
+- [templates/login.html](../templates/login.html)
 
 ### Customer UI
-- [templates/index.html](/C:/Users/DELL/Desktop/payments_api/templates/index.html)
+- [templates/index.html](../templates/index.html)
 
 ## 8. Practical Takeaway
 
@@ -339,7 +339,7 @@ Customer chooses product
 -> Paystack handles payment
 -> Flask verifies payment
 -> Fulfillment job is queued
--> Worker sends order to InstantDataGH
+-> Worker sends order to the fulfillment provider
 -> Admin can manually confirm final delivery
 ```
 

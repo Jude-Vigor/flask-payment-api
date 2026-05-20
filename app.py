@@ -57,8 +57,8 @@ def register_commands(app):
             "SECRET_KEY",
             "PAYSTACK_SECRET_KEY",
             "BASE_URL",
-            "INSTANTDATAGH_API_KEY",
-            "INSTANTDATAGH_BASE_URL",
+            "VENDOR_API_KEY",
+            "VENDOR_BASE_URL",
         ]
         missing = [key for key in required_env if not app.config.get(key)]
 
