@@ -26,6 +26,10 @@ The project is currently deployed on Railway with PostgreSQL. The web service ru
 
 ![Mobile payment approval](static/images/mobile-approval.jpg)
 
+### Data received
+
+![Customer received data](static/images/received-data.jpg)
+
 ## Key Features
 
 - Database-backed product catalog, orders, payment transactions, fulfillment jobs, and fulfillment attempts
