@@ -18,10 +18,6 @@ The project is currently deployed on Railway with PostgreSQL. The web service ru
 
 ![Checkout flow](static/images/checkout.png)
 
-### Paystack payment dashboard
-
-![Paystack payment dashboard](static/images/paystack-dashb.png)
-
 ### Mobile payment approval
 
 ![Mobile payment approval](static/images/mobile-approval.jpg)
@@ -29,6 +25,10 @@ The project is currently deployed on Railway with PostgreSQL. The web service ru
 ### Data received
 
 ![Customer received data](static/images/received-data.jpg)
+
+### Paystack payment dashboard
+
+![Paystack payment dashboard](static/images/paystack-dashb.png)
 
 ## Key Features
 
