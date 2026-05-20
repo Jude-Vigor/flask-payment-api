@@ -8,6 +8,24 @@ This repository implements a backend for digital service delivery. The applicati
 
 The project is currently deployed on Railway with PostgreSQL. The web service runs database migrations on startup and serves the Flask application with Gunicorn. The repository also includes process examples for a traditional VPS deployment using Gunicorn, systemd, and Nginx.
 
+## Screenshots
+
+### Customer storefront
+
+![Customer storefront](static/images/landing.png)
+
+### Checkout flow
+
+![Checkout flow](static/images/checkout.png)
+
+### Paystack payment dashboard
+
+![Paystack payment dashboard](static/images/paystack-dashb.png)
+
+### Mobile payment approval
+
+![Mobile payment approval](static/images/mobile-approval.jpg)
+
 ## Key Features
 
 - Database-backed product catalog, orders, payment transactions, fulfillment jobs, and fulfillment attempts
