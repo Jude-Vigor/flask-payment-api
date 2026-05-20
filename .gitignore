@@ -16,3 +16,5 @@ Q_A.py
 .coverage
 .pytest_cache/
 htmlcov/
+Q_A.md
+pytest-cache-files-5pk61oe4
