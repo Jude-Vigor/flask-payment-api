@@ -1,6 +1,6 @@
 import click
 import time
-from flask import Flask, render_template
+from flask import Flask, render_template, jsonify
 
 from config import Config
 from extensions import db, migrate
@@ -64,11 +64,9 @@ def register_commands(app):
 
         with app.app_context():
             active_products = Product.query.filter_by(is_active=True).count()
-            queued_jobs = (
-                FulfillmentJob.query.filter(
-                    FulfillmentJob.status.in_(["PENDING", "RETRYING"])
-                ).count()
-            )
+            queued_jobs = FulfillmentJob.query.filter(
+                FulfillmentJob.status.in_(["PENDING", "RETRYING"])
+            ).count()
 
         click.echo("Launch readiness")
         click.echo(f"- BASE_URL: {app.config.get('BASE_URL')}")
@@ -107,8 +105,14 @@ def create_app():
 
         return render_template(
             "index.html",
-            disabled_data_purchase_networks=app.config["DISABLED_DATA_PURCHASE_NETWORKS"],
+            disabled_data_purchase_networks=app.config[
+                "DISABLED_DATA_PURCHASE_NETWORKS"
+            ],
         )
+
+    @app.route("/health")
+    def health():
+        return jsonify({"status": "ok"}), 200
 
     register_commands(app)
 
