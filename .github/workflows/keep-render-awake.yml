@@ -2,8 +2,8 @@ name: Keep Render Awake
 
 on:
   schedule:
-    # every 10 minutes
-    - cron: "*/10 * * * *"
+    # every 10 minutes, offset to avoid GitHub Actions high-load minutes
+    - cron: "3,13,23,33,43,53 * * * *"
 
   workflow_dispatch:
 
