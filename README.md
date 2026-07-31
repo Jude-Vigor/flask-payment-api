@@ -6,7 +6,7 @@ Production-style Flask backend for digital product checkout, payment verificatio
 
 This repository implements a backend for digital service delivery. The application exposes a public checkout flow, persists products, orders, and payment records in a relational database, verifies Paystack payments via callback and webhook, and processes post-payment fulfillment in a separate worker loop with retry scheduling. In production, it is configured to run against PostgreSQL.
 
-The project is currently deployed on Railway with PostgreSQL. The web service runs database migrations on startup and serves the Flask application with Gunicorn. The repository also includes process examples for a traditional VPS deployment using Gunicorn, systemd, and Nginx.
+The project is currently deployed on Render with PostgreSQL. The web service runs database migrations on startup and serves the Flask application with Gunicorn. The repository also includes process examples for a traditional VPS deployment using Gunicorn, systemd, and Nginx.
 
 ## Screenshots
 
